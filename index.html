@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>resemblanced</title>
+<meta name="description" content="resemblanced - links">
+<meta name="theme-color" content="#000000">
+<meta property="og:title" content="resemblanced">
+<meta property="og:description" content="R">
+<link rel="icon" href="pfp.png">
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Cormorant+Garamond:ital,wght@1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" onerror="document.documentElement.classList.add('noicons')">
+<style>
+  :root {
+    --accent: hsl(0 0% 82%);
+    --glow: hsl(0 0% 82% / .5);
+    --bg-center: hsl(0 0% 9%);
+    --bg-edge: #050505;
+    --text:#ece7e7; --muted:#9a9090;
+  }
+  * { box-sizing:border-box; margin:0; }
+  html, body { min-height:100%; }
+  body {
+    background: radial-gradient(ellipse at 50% 35%, var(--bg-center) 0%, var(--bg-edge) 70%);
+    color: var(--text);
+    font-family: "Cormorant Garamond", Georgia, serif;
+    display:flex; align-items:center; justify-content:center;
+    padding:24px; text-align:center; min-height:100dvh; overflow-x:hidden;
+    transition: background 1.2s;
+  }
+  #fx { position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:0; }
+  main { position:relative; z-index:1; width:100%; max-width:380px; }
+
+  .pfp {
+    width:140px; height:140px; border-radius:50%; object-fit:cover;
+    background:#111; display:block; margin:0 auto 22px;
+    border:2px solid var(--accent);
+    box-shadow: 0 0 0 6px #050505, 0 0 0 7px var(--accent), 0 0 40px var(--glow);
+    animation: pulse 5s ease-in-out infinite;
+  }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 6px #050505, 0 0 0 7px var(--accent), 0 0 75px var(--glow); } }
+
+  h1 { font-family:"UnifrakturCook","Times New Roman",serif; font-size:2.6rem; font-weight:700; letter-spacing:.02em; text-shadow:0 0 22px var(--glow); }
+  .bio { font-size:1.25rem; font-style:italic; color:var(--muted); margin:8px 0 30px; line-height:1.5; }
+
+  .socials { display:flex; justify-content:center; gap:16px; }
+  .socials a {
+    width:54px; height:54px; border-radius:50%;
+    display:grid; place-items:center;
+    color:var(--text); font-size:1.35rem; text-decoration:none;
+    border:1px solid color-mix(in srgb, var(--accent) 35%, #222);
+    background:rgba(0,0,0,.55);
+    transition: color .2s, border-color .2s, box-shadow .2s, transform .2s;
+  }
+  .socials a:hover { color:#fff; border-color:var(--accent); box-shadow:0 0 22px var(--glow); transform:translateY(-3px); }
+  .socials .t { display:none; font-size:.8rem; }
+  .noicons .socials i { display:none; }
+  .noicons .socials .t { display:inline; }
+  a:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+
+  #gate {
+    position:fixed; inset:0; width:100%; background:#000; display:none;
+    align-items:center; justify-content:center; z-index:10; cursor:pointer; border:0;
+    font-family:"UnifrakturCook",serif; font-size:2rem; color:var(--text);
+  }
+  #gate.show { display:flex; }
+  #mute {
+    position:fixed; bottom:18px; right:18px; z-index:5; width:42px; height:42px; border-radius:50%;
+    background:rgba(0,0,0,.55); border:1px solid color-mix(in srgb, var(--accent) 35%, #222);
+    color:var(--muted); cursor:pointer; font-size:1rem;
+  }
+  #mute:hover { color:var(--text); border-color:var(--accent); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pfp { animation:none; } .socials a, body { transition:none; }
+  }
+</style>
+</head>
+<body>
+<button id="gate">Enter</button>
+<canvas id="fx"></canvas>
+
+<main>
+  <!-- Your photo: put a file named pfp.png next to this file -->
+  <img class="pfp" id="pfp" src="pfp.png" alt="">
+  <h1>resemblanced</h1>
+  <p class="bio">R</p>
+
+  <nav class="socials">
+    <a href="https://www.tiktok.com/@resemblanced" target="_blank" rel="noopener" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i><span class="t">TikTok</span></a>
+    <a href="https://discord.com/users/574658765979385896" target="_blank" rel="noopener" aria-label="Discord"><i class="fa-brands fa-discord"></i><span class="t">Discord</span></a>
+    <a href="https://www.instagram.com/exitlesse" target="_blank" rel="noopener" aria-label="Instagram"><i class="fa-brands fa-instagram"></i><span class="t">Insta</span></a>
+    <a href="https://www.snapchat.com/add/resemblanced" target="_blank" rel="noopener" aria-label="Snapchat"><i class="fa-brands fa-snapchat"></i><span class="t">Snap</span></a>
+  </nav>
+</main>
+
+<button id="mute" aria-label="Mute"><i class="fa-solid fa-volume-high"></i></button>
+<!-- Song: with song.mp3 next to this file you get reverb; without it, the YouTube version plays (no reverb) -->
+<audio id="audio" src="song.mp3" preload="auto"></audio>
+<div id="yt" style="position:fixed;left:-9999px;width:200px;height:200px;opacity:0;pointer-events:none"></div>
+
+<script>
+  /* ---------- Audio ---------- */
+  const START = 11;                 // start time in seconds (0:11)
+  const YT_ID = 'o4y8QEvNe-8';
+  const audio = document.getElementById('audio');
+  const gate = document.getElementById('gate');
+  const mute = document.getElementById('mute');
+  let mode = 'file', ytPlayer = null, ctx = null;
+  const setMuteIcon = m => mute.innerHTML = m ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
+
+  /* Mode 1: local song.mp3 with reverb (Web Audio) */
+  function makeReverb(ctx) {
+    const sec = 3, len = ctx.sampleRate * sec, ir = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let c = 0; c < 2; c++) {
+      const d = ir.getChannelData(c);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6);
+    }
+    const conv = ctx.createConvolver(); conv.buffer = ir;
+    return conv;
+  }
+  try {
+    if (location.protocol === 'file:') throw 0;   // reverb is silent when opened from a local file, so play it plainly
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const src = ctx.createMediaElementSource(audio);
+    const dry = ctx.createGain(); dry.gain.value = 0.85;
+    const wet = ctx.createGain(); wet.gain.value = 0.45;
+    const tone = ctx.createBiquadFilter(); tone.type = 'lowpass'; tone.frequency.value = 3500;
+    src.connect(dry).connect(ctx.destination);
+    src.connect(makeReverb(ctx)).connect(tone).connect(wet).connect(ctx.destination);
+  } catch (e) { ctx = null; }
+
+  const seekStart = () => { try { audio.currentTime = START; } catch (e) {} };
+  audio.addEventListener('loadedmetadata', seekStart);
+  if (audio.readyState >= 1) seekStart();
+  audio.addEventListener('ended', () => { seekStart(); audio.play().catch(() => {}); });   // restart when it finishes
+
+  function playFile() {
+    if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+    return audio.play();
+  }
+  function tryAutoplay() {
+    playFile().then(() => {
+      if (ctx && ctx.state !== 'running') gate.classList.add('show');
+    }).catch(() => { if (!audio.error) gate.classList.add('show'); });
+  }
+
+  /* Mode 2: YouTube fallback if song.mp3 is missing (no reverb possible) */
+  function startYouTube() {
+    if (mode === 'yt') return;
+    mode = 'yt';
+    gate.classList.remove('show');
+    window.onYouTubeIframeAPIReady = () => {
+      ytPlayer = new YT.Player('yt', {
+        videoId: YT_ID,
+        playerVars: Object.assign({ start: START, autoplay: 1, controls: 0, playsinline: 1 }, location.protocol.startsWith('http') ? { origin: location.origin } : {}),
+        events: {
+          onReady: e => { e.target.playVideo(); setTimeout(() => { if (e.target.getPlayerState() !== 1) gate.classList.add('show'); }, 1500); },
+          onStateChange: e => { if (e.data === 0) { e.target.seekTo(START); e.target.playVideo(); } }
+        }
+      });
+    };
+    const t = document.createElement('script');
+    t.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(t);
+  }
+  audio.addEventListener('error', startYouTube);
+
+  gate.addEventListener('click', () => {
+    gate.classList.remove('show');
+    if (mode === 'file') playFile(); else if (ytPlayer) ytPlayer.playVideo();
+  });
+  mute.addEventListener('click', () => {
+    if (mode === 'file') { audio.muted = !audio.muted; setMuteIcon(audio.muted); }
+    else if (ytPlayer) { ytPlayer.isMuted() ? ytPlayer.unMute() : ytPlayer.mute(); setMuteIcon(ytPlayer.isMuted()); }
+  });
+  audio.volume = 0.8;
+  tryAutoplay();
+
+  /* ---------- Color from the photo ---------- */
+  let hue = 0, sat = 0, lit = 82;
+  const root = document.documentElement.style;
+
+  function applyColor() {
+    root.setProperty('--accent', `hsl(${hue} ${sat}% ${lit}%)`);
+    root.setProperty('--glow', `hsl(${hue} ${sat}% ${lit}% / .5)`);
+    root.setProperty('--bg-center', `hsl(${hue} ${Math.round(sat * .55)}% 11%)`);
+    root.setProperty('--bg-edge', `hsl(${hue} ${Math.round(sat * .4)}% 3%)`);
+    root.setProperty('--text', `hsl(${hue} 25% 92%)`);
+    root.setProperty('--muted', `hsl(${hue} 12% 62%)`);
+  }
+
+  function dominantColor(img) {
+    const c = document.createElement('canvas');
+    c.width = c.height = 40;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0, 40, 40);
+    const d = ctx.getImageData(0, 0, 40, 40).data;
+    const bins = Array.from({ length: 12 }, () => ({ w: 0, h: 0 }));
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i] / 255, g = d[i+1] / 255, b = d[i+2] / 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2, df = max - min;
+      if (df < .12 || l < .12 || l > .9) continue;          // ignore grays, blacks and whites
+      const s = df / (1 - Math.abs(2 * l - 1));
+      let h = max === r ? ((g - b) / df) % 6 : max === g ? (b - r) / df + 2 : (r - g) / df + 4;
+      h = (h * 60 + 360) % 360;
+      const bin = bins[Math.floor(h / 30)];
+      bin.w += s; bin.h += h * s;
+    }
+    const best = bins.reduce((a, b) => (b.w > a.w ? b : a));
+    if (best.w === 0) return null;
+    return Math.round(best.h / best.w);
+  }
+
+  const pfp = document.getElementById('pfp');
+  function readPfp() {
+    try { const h = dominantColor(pfp); if (h !== null) { hue = h; sat = 70; lit = 52; } else { sat = 0; lit = 82; } } catch (e) { /* fall back to the default color */ }
+    applyColor();
+  }
+  applyColor();
+  pfp.complete ? readPfp() : pfp.addEventListener('load', readPfp);
+
+  /* ---------- Embers in the photo color ---------- */
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const cv = document.getElementById('fx'), x = cv.getContext('2d');
+    let W, H, parts = [];
+    const size = () => { W = cv.width = innerWidth; H = cv.height = innerHeight; };
+    size(); addEventListener('resize', size);
+    const mk = (init) => ({
+      x: Math.random() * W, y: init ? Math.random() * H : H + 10,
+      r: Math.random() * 1.8 + .5, v: Math.random() * .5 + .2,
+      drift: Math.random() * .6 - .3, a: Math.random() * .6 + .2
+    });
+    for (let i = 0; i < 55; i++) parts.push(mk(true));
+    (function loop() {
+      x.clearRect(0, 0, W, H);
+      const col = getComputedStyle(document.documentElement).getPropertyValue('--accent');
+      parts.forEach((p, i) => {
+        p.y -= p.v; p.x += p.drift;
+        if (p.y < -10) parts[i] = mk(false);
+        x.globalAlpha = p.a * (p.y / H);
+        x.fillStyle = col;
+        x.shadowColor = col; x.shadowBlur = 8;
+        x.beginPath(); x.arc(p.x, p.y, p.r, 0, 7); x.fill();
+      });
+      requestAnimationFrame(loop);
+    })();
+  }
+</script>
+</body>
+</html>
