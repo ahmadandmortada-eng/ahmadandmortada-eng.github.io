@@ -94,6 +94,9 @@
     background:rgba(0,0,0,.55); border:1px solid color-mix(in srgb, var(--accent) 35%, #222);
     color:var(--muted); cursor:pointer; font-size:1rem;
   }
+  #mute .t { display:none; font-size:.7rem; }
+  .noicons #mute i { display:none; }
+  .noicons #mute .t { display:inline; }
   #mute:hover { color:var(--text); border-color:var(--accent); }
 
 
@@ -203,7 +206,17 @@
   const gate = document.getElementById('gate');
   const mute = document.getElementById('mute');
   let mode = 'file', ytPlayer = null, ctx = null;
-  const setMuteIcon = m => mute.innerHTML = m ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
+  let isMuted = false, master = null;
+  const setMuteIcon = m => {
+    mute.innerHTML = (m ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>') + '<span class="t">' + (m ? 'Off' : 'On') + '</span>';
+    mute.setAttribute('aria-label', m ? 'Unmute' : 'Mute');
+  };
+  function applyMute() {
+    if (master) master.gain.value = isMuted ? 0 : 1;      // silence the whole Web Audio chain (dry + reverb)
+    audio.muted = isMuted;
+    if (ytPlayer && ytPlayer.mute) { isMuted ? ytPlayer.mute() : ytPlayer.unMute(); }
+    setMuteIcon(isMuted);
+  }
 
   /* Mode 1: local song.mp3 with reverb (Web Audio) */
   function makeReverb(ctx) {
@@ -222,8 +235,9 @@
     const dry = ctx.createGain(); dry.gain.value = 0.85;
     const wet = ctx.createGain(); wet.gain.value = 0.45;
     const tone = ctx.createBiquadFilter(); tone.type = 'lowpass'; tone.frequency.value = 3500;
-    src.connect(dry).connect(ctx.destination);
-    src.connect(makeReverb(ctx)).connect(tone).connect(wet).connect(ctx.destination);
+    master = ctx.createGain(); master.gain.value = 1; master.connect(ctx.destination);
+    src.connect(dry).connect(master);
+    src.connect(makeReverb(ctx)).connect(tone).connect(wet).connect(master);
   } catch (e) { ctx = null; }
 
   const seekStart = () => { try { audio.currentTime = START; } catch (e) {} };
@@ -251,7 +265,7 @@
         videoId: YT_ID,
         playerVars: Object.assign({ start: START, autoplay: 1, controls: 0, playsinline: 1 }, location.protocol.startsWith('http') ? { origin: location.origin } : {}),
         events: {
-          onReady: e => { e.target.playVideo(); setTimeout(() => { if (e.target.getPlayerState() !== 1) gate.classList.add('show'); }, 1500); },
+          onReady: e => { if (isMuted) e.target.mute(); e.target.playVideo(); setTimeout(() => { if (e.target.getPlayerState() !== 1) gate.classList.add('show'); }, 1500); },
           onStateChange: e => { if (e.data === 0) { e.target.seekTo(START); e.target.playVideo(); } }
         }
       });
@@ -266,10 +280,8 @@
     gate.classList.remove('show');
     if (mode === 'file') playFile(); else if (ytPlayer) ytPlayer.playVideo();
   });
-  mute.addEventListener('click', () => {
-    if (mode === 'file') { audio.muted = !audio.muted; setMuteIcon(audio.muted); }
-    else if (ytPlayer) { ytPlayer.isMuted() ? ytPlayer.unMute() : ytPlayer.mute(); setMuteIcon(ytPlayer.isMuted()); }
-  });
+  mute.addEventListener('click', () => { isMuted = !isMuted; applyMute(); });
+  setMuteIcon(false);
   audio.volume = 0.8;
   tryAutoplay();
 
