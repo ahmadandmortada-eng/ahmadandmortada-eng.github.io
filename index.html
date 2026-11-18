@@ -2,12 +2,36 @@
 <html lang="en" dir="ltr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>resemblanced</title>
-<meta name="description" content="resemblanced - links">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Resemblanced | Rassim Resemblance | Rassim Heguib | Rassim Shop</title>
+<meta name="description" content="Welcome to Resemblance Site">
+<meta name="keywords" content="Rassim, Rassim shop, Rassim Heguib, Rassim Resemblance, Resemblanced">
+<meta name="author" content="Rassim Heguib">
+<meta name="robots" content="index, follow">
 <meta name="theme-color" content="#000000">
-<meta property="og:title" content="resemblanced">
-<meta property="og:description" content="R">
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Resemblance">
+<meta property="og:title" content="Resemblanced | Rassim Resemblance">
+<meta property="og:description" content="Welcome to Resemblance Site">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Resemblanced | Rassim Resemblance">
+<meta name="twitter:description" content="Welcome to Resemblance Site">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Resemblance",
+  "alternateName": ["Resemblanced", "Rassim", "Rassim shop", "Rassim Heguib", "Rassim Resemblance"],
+  "description": "Welcome to Resemblance Site"
+}
+</script>
+<script>
+  /* force HTTPS (skipped on localhost / local files) */
+  if (location.protocol === 'http:' && !/^(localhost|127\.|192\.168\.)/.test(location.hostname)) {
+    location.replace('https://' + location.host + location.pathname + location.search + location.hash);
+  }
+</script>
 <link rel="icon" href="pfp.png">
 <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Cormorant+Garamond:ital,wght@1,500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" onerror="document.documentElement.classList.add('noicons')">
@@ -20,31 +44,31 @@
     --text:#ece7e7; --muted:#9a9090;
   }
   * { box-sizing:border-box; margin:0; }
-  html, body { min-height:100%; }
+  html { height:100%; background:var(--bg-edge); -webkit-text-size-adjust:100%; text-size-adjust:100%; overscroll-behavior:none; }
+  body { height:100%; -webkit-tap-highlight-color:transparent; overscroll-behavior:none; }
   body {
     background: radial-gradient(ellipse at 50% 35%, var(--bg-center) 0%, var(--bg-edge) 70%);
     color: var(--text);
     font-family: "Cormorant Garamond", Georgia, serif;
-    display:flex; align-items:center; justify-content:center;
-    padding:24px; text-align:center; min-height:100dvh; overflow-x:hidden;
+    text-align:center; min-height:100dvh; overflow:hidden;
     transition: background 1.2s;
   }
   #fx { position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:0; }
   main { position:relative; z-index:1; width:100%; max-width:380px; }
 
   .pfp {
-    width:140px; height:140px; border-radius:50%; object-fit:cover;
+    width:clamp(108px,32vw,148px); height:clamp(108px,32vw,148px); border-radius:50%; object-fit:cover;
     background:#111; display:block; margin:0 auto 22px;
     border:2px solid var(--accent);
-    box-shadow: 0 0 0 6px #050505, 0 0 0 7px var(--accent), 0 0 40px var(--glow);
+    box-shadow: 0 0 0 6px var(--bg-edge), 0 0 0 7px var(--accent), 0 0 40px var(--glow);
     animation: pulse 5s ease-in-out infinite;
   }
-  @keyframes pulse { 50% { box-shadow: 0 0 0 6px #050505, 0 0 0 7px var(--accent), 0 0 75px var(--glow); } }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 6px var(--bg-edge), 0 0 0 7px var(--accent), 0 0 75px var(--glow); } }
 
-  h1 { font-family:"UnifrakturCook","Times New Roman",serif; font-size:2.6rem; font-weight:700; letter-spacing:.02em; text-shadow:0 0 22px var(--glow); }
-  .bio { font-size:1.25rem; font-style:italic; color:var(--muted); margin:8px 0 30px; line-height:1.5; }
+  h1 { font-family:"UnifrakturCook","Times New Roman",serif; font-size:clamp(2.1rem,9.5vw,2.8rem); overflow-wrap:anywhere; font-weight:700; letter-spacing:.02em; text-shadow:0 0 22px var(--glow); }
+  .bio { font-size:clamp(1.1rem,4.4vw,1.3rem); font-style:italic; color:var(--muted); margin:8px 0 30px; line-height:1.5; }
 
-  .socials { display:flex; justify-content:center; gap:16px; }
+  .socials { display:flex; justify-content:center; flex-wrap:wrap; gap:16px; }
   .socials a {
     width:54px; height:54px; border-radius:50%;
     display:grid; place-items:center;
@@ -66,11 +90,52 @@
   }
   #gate.show { display:flex; }
   #mute {
-    position:fixed; bottom:18px; right:18px; z-index:5; width:42px; height:42px; border-radius:50%;
+    position:fixed; bottom:calc(18px + env(safe-area-inset-bottom,0px)); right:calc(18px + env(safe-area-inset-right,0px)); z-index:5; width:44px; height:44px; border-radius:50%;
     background:rgba(0,0,0,.55); border:1px solid color-mix(in srgb, var(--accent) 35%, #222);
     color:var(--muted); cursor:pointer; font-size:1rem;
   }
   #mute:hover { color:var(--text); border-color:var(--accent); }
+
+
+  /* ---- swipeable pages ---- */
+  #pages {
+    position:fixed; inset:0; z-index:1; display:flex; overflow-x:auto; overflow-y:hidden;
+    scroll-snap-type:x mandatory; overscroll-behavior-x:contain; scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  #pages::-webkit-scrollbar { display:none; }
+  .page { flex:0 0 100%; min-width:100%; scroll-snap-align:start; scroll-snap-stop:always; display:flex; padding:max(24px,env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-right,0px)) calc(70px + env(safe-area-inset-bottom,0px)) max(24px,env(safe-area-inset-left,0px)); overflow-y:auto; overscroll-behavior:contain; }
+  .page > main { margin:auto; max-width:min(420px,100%); }
+  .page .bio { font-size:clamp(1.05rem,4vw,1.25rem); }
+  #p2 .bio, #p3 .bio { margin-bottom:0; }
+  .foot { margin-top:34px; padding-top:18px; border-top:1px solid color-mix(in srgb, var(--accent) 25%, #222); font-size:.95rem; color:var(--muted); line-height:1.8; }
+  .foot a { color:var(--text); text-decoration:none; border-bottom:1px solid var(--glow); }
+  .foot a:hover { color:#fff; border-color:var(--accent); }
+  .dots { position:fixed; bottom:calc(26px + env(safe-area-inset-bottom,0px)); left:50%; transform:translateX(-50%); z-index:5; display:flex; gap:16px; }
+  .dots button {
+    width:10px; height:10px; padding:0; border-radius:50%; cursor:pointer;
+    border:1px solid var(--accent); background:transparent; transition:background .3s, box-shadow .3s, transform .3s;
+  }
+  @media (hover:none) and (pointer:coarse) { .dots { pointer-events:none; } }   /* phones: swipe only, dots are just indicators */
+  .dots button.on { background:var(--accent); box-shadow:0 0 12px var(--glow); transform:scale(1.2); }
+
+
+  /* ---- mouse drag on desktop ---- */
+  @media (hover:hover) and (pointer:fine) { #pages { cursor:grab; } #pages.drag { cursor:grabbing; scroll-snap-type:none; user-select:none; } }
+  .dots button:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
+
+  /* ---- short screens (phones in landscape, small laptops) ---- */
+  @media (max-height:560px) {
+    .pfp { width:84px; height:84px; margin-bottom:12px; }
+    h1 { font-size:clamp(1.7rem,6vw,2.2rem); }
+    .bio { margin:4px 0 16px; }
+    .socials a { width:46px; height:46px; font-size:1.15rem; }
+    .foot { margin-top:18px; padding-top:12px; }
+  }
+  /* very narrow phones */
+  @media (max-width:340px) { .socials { gap:10px; } .socials a { width:48px; height:48px; } }
+  /* big screens */
+  @media (min-width:1200px) { main { max-width:420px; } .page > main { max-width:460px; } }
 
   @media (prefers-reduced-motion: reduce) {
     .pfp { animation:none; } .socials a, body { transition:none; }
@@ -81,6 +146,8 @@
 <button id="gate">Enter</button>
 <canvas id="fx"></canvas>
 
+<div id="pages">
+<section class="page" id="p1">
 <main>
   <!-- Your photo: put a file named pfp.png next to this file -->
   <img class="pfp" id="pfp" src="pfp.png" alt="">
@@ -94,6 +161,34 @@
     <a href="https://www.snapchat.com/add/resemblanced" target="_blank" rel="noopener" aria-label="Snapchat"><i class="fa-brands fa-snapchat"></i><span class="t">Snap</span></a>
   </nav>
 </main>
+</section>
+
+<section class="page" id="p2">
+<main>
+  <h1>Shop</h1>
+  <p class="bio">Not set yet...</p>
+</main>
+</section>
+
+<section class="page" id="p3">
+<main>
+  <h1>Welcome</h1>
+  <p class="bio">Dear visitor, thank you for visiting Resemblance.<br><br>
+  We are currently preparing an online store offering digital products and gift cards. Payments will be accepted by Algerian bank transfer, with automatic processing.<br><br>
+  Please check back soon.</p>
+  <footer class="foot">
+    <p>Contact: <a href="mailto:xfosto9@gmail.com">xfosto9@gmail.com</a></p>
+    <p>&copy; 2026 Resemblance. All rights reserved.</p>
+  </footer>
+</main>
+</section>
+</div>
+
+<nav class="dots" aria-label="Pages">
+  <button class="on" aria-label="Links"></button>
+  <button aria-label="Shop"></button>
+  <button aria-label="Message"></button>
+</nav>
 
 <button id="mute" aria-label="Mute"><i class="fa-solid fa-volume-high"></i></button>
 <!-- Song: with song.mp3 next to this file you get reverb; without it, the YouTube version plays (no reverb) -->
@@ -187,6 +282,7 @@
     root.setProperty('--glow', `hsl(${hue} ${sat}% ${lit}% / .5)`);
     root.setProperty('--bg-center', `hsl(${hue} ${Math.round(sat * .55)}% 11%)`);
     root.setProperty('--bg-edge', `hsl(${hue} ${Math.round(sat * .4)}% 3%)`);
+    const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = `hsl(${hue} ${Math.round(sat * .4)}% 3%)`;
     root.setProperty('--text', `hsl(${hue} 25% 92%)`);
     root.setProperty('--muted', `hsl(${hue} 12% 62%)`);
   }
@@ -232,7 +328,7 @@
       r: Math.random() * 1.8 + .5, v: Math.random() * .5 + .2,
       drift: Math.random() * .6 - .3, a: Math.random() * .6 + .2
     });
-    for (let i = 0; i < 55; i++) parts.push(mk(true));
+    for (let i = 0; i < (innerWidth < 600 ? 30 : 55); i++) parts.push(mk(true));
     (function loop() {
       x.clearRect(0, 0, W, H);
       const col = getComputedStyle(document.documentElement).getPropertyValue('--accent');
@@ -247,6 +343,49 @@
       requestAnimationFrame(loop);
     })();
   }
+  /* ---------- Pages + dots ---------- */
+  const pagesEl = document.getElementById('pages');
+  const dots = [...document.querySelectorAll('.dots button')];
+  const goTo = i => pagesEl.scrollTo({ left: i * pagesEl.clientWidth, behavior: 'smooth' });
+  dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
+  pagesEl.addEventListener('scroll', () => {
+    const i = Math.round(pagesEl.scrollLeft / pagesEl.clientWidth);
+    dots.forEach((d, k) => d.classList.toggle('on', k === i));
+  }, { passive: true });
+  addEventListener('keydown', e => {
+    const i = Math.round(pagesEl.scrollLeft / pagesEl.clientWidth);
+    if (e.key === 'ArrowRight') goTo(Math.min(i + 1, dots.length - 1));
+    if (e.key === 'ArrowLeft') goTo(Math.max(i - 1, 0));
+  });
+  addEventListener('resize', () => {
+    const i = dots.findIndex(d => d.classList.contains('on'));
+    pagesEl.scrollTo({ left: i * pagesEl.clientWidth });
+  });
+
+  /* mouse drag (desktop) */
+  (function () {
+    let down = false, moved = 0, startX = 0, startLeft = 0;
+    pagesEl.addEventListener('pointerdown', e => {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      down = true; moved = 0; startX = e.clientX; startLeft = pagesEl.scrollLeft;
+    });
+    addEventListener('pointermove', e => {
+      if (!down) return;
+      const dx = e.clientX - startX; moved = Math.max(moved, Math.abs(dx));
+      if (moved > 5) { pagesEl.classList.add('drag'); pagesEl.scrollLeft = startLeft - dx; }
+    });
+    addEventListener('pointerup', e => {
+      if (!down) return; down = false;
+      if (!pagesEl.classList.contains('drag')) return;
+      pagesEl.classList.remove('drag');
+      const w = pagesEl.clientWidth, d = e.clientX - startX;
+      let i = Math.round(startLeft / w);
+      if (Math.abs(d) > w * .15) i += d < 0 ? 1 : -1;
+      goTo(Math.max(0, Math.min(i, dots.length - 1)));
+    });
+    pagesEl.addEventListener('click', e => { if (moved > 5) { e.preventDefault(); e.stopPropagation(); moved = 0; } }, true);
+  })();
+
 </script>
 </body>
 </html>
