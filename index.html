@@ -140,6 +140,42 @@
   /* big screens */
   @media (min-width:1200px) { main { max-width:420px; } .page > main { max-width:460px; } }
 
+
+  /* ---- main menu ---- */
+  #menuBtn {
+    position:fixed; top:calc(18px + env(safe-area-inset-top,0px)); left:calc(18px + env(safe-area-inset-left,0px)); z-index:9;
+    width:44px; height:44px; padding:0; border-radius:50%; cursor:pointer; display:grid; place-content:center; gap:5px;
+    background:rgba(0,0,0,.55); border:1px solid color-mix(in srgb, var(--accent) 35%, #222);
+    transition:border-color .2s, box-shadow .2s;
+  }
+  #menuBtn span { display:block; width:18px; height:1.5px; background:var(--muted); transition:transform .4s, opacity .25s, background .2s; }
+  #menuBtn:hover { border-color:var(--accent); box-shadow:0 0 18px var(--glow); }
+  #menuBtn:hover span { background:var(--text); }
+  #menuBtn:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+  .menu-open #menuBtn span:nth-child(1) { transform:translateY(6.5px) rotate(45deg); }
+  .menu-open #menuBtn span:nth-child(2) { opacity:0; }
+  .menu-open #menuBtn span:nth-child(3) { transform:translateY(-6.5px) rotate(-45deg); }
+
+  #menu {
+    position:fixed; inset:0; z-index:8; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(ellipse at 50% 35%, var(--bg-center) 0%, var(--bg-edge) 75%);
+    visibility:hidden; clip-path:circle(0 at 40px 40px);
+    transition:clip-path .7s cubic-bezier(.7,0,.2,1), visibility 0s .7s;
+  }
+  .menu-open #menu { visibility:visible; clip-path:circle(150% at 40px 40px); transition:clip-path .8s cubic-bezier(.7,0,.2,1), visibility 0s; }
+  #menu nav { display:flex; flex-direction:column; align-items:center; gap:clamp(14px,3.5vh,26px); }
+  #menu nav button {
+    background:none; border:0; padding:6px 14px; cursor:pointer; color:var(--muted);
+    font-family:"UnifrakturCook","Times New Roman",serif; font-size:clamp(2.2rem,9vw,3.2rem); line-height:1.1;
+    opacity:0; transform:translateY(18px);
+    transition:opacity .6s, transform .6s, color .25s, text-shadow .25s;
+  }
+  #menu nav button small { display:block; font-family:"Cormorant Garamond",Georgia,serif; font-style:italic; font-size:.95rem; letter-spacing:.3em; text-indent:.3em; opacity:.7; }
+  .menu-open #menu nav button { opacity:1; transform:none; transition-delay:var(--d), var(--d), 0s, 0s; }   /* first the menu opens, then each item appears in turn */
+  #menu nav button:hover, #menu nav button.on { color:var(--text); text-shadow:0 0 22px var(--glow); }
+  #menu nav button:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
+  @media (prefers-reduced-motion: reduce) { #menu, #menu nav button, #menuBtn span { transition:none !important; } }
+
   @media (prefers-reduced-motion: reduce) {
     .pfp { animation:none; } .socials a, body { transition:none; }
   }
@@ -192,6 +228,15 @@
   <button aria-label="Shop"></button>
   <button aria-label="Message"></button>
 </nav>
+
+<button id="menuBtn" aria-label="Menu" aria-expanded="false" aria-controls="menu"><span></span><span></span><span></span></button>
+<div id="menu" aria-hidden="true">
+  <nav aria-label="Main menu">
+    <button data-i="0" class="on" style="--d:.55s"><small>01</small>Home</button>
+    <button data-i="1" style="--d:.7s"><small>02</small>Shop</button>
+    <button data-i="2" style="--d:.85s"><small>03</small>Contact</button>
+  </nav>
+</div>
 
 <button id="mute" aria-label="Mute"><i class="fa-solid fa-volume-high"></i></button>
 <!-- Song: with song.mp3 next to this file you get reverb; without it, the YouTube version plays (no reverb) -->
@@ -373,6 +418,23 @@
     const i = dots.findIndex(d => d.classList.contains('on'));
     pagesEl.scrollTo({ left: i * pagesEl.clientWidth });
   });
+
+  /* ---------- Main menu ---------- */
+  const menuBtn = document.getElementById('menuBtn'), menuEl = document.getElementById('menu');
+  const menuItems = [...menuEl.querySelectorAll('button')];
+  function setMenu(open) {
+    document.body.classList.toggle('menu-open', open);
+    menuBtn.setAttribute('aria-expanded', open);
+    menuEl.setAttribute('aria-hidden', !open);
+    pagesEl.inert = open;
+  }
+  menuBtn.addEventListener('click', () => setMenu(!document.body.classList.contains('menu-open')));
+  menuItems.forEach(b => b.addEventListener('click', () => { setMenu(false); goTo(+b.dataset.i); }));
+  addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(false); });
+  pagesEl.addEventListener('scroll', () => {
+    const i = Math.round(pagesEl.scrollLeft / pagesEl.clientWidth);
+    menuItems.forEach((b, k) => b.classList.toggle('on', k === i));
+  }, { passive: true });
 
   /* mouse drag (desktop) */
   (function () {
