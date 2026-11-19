@@ -48,6 +48,15 @@ alter table public.product_secrets enable row level security;
 create policy "admin only" on public.product_secrets
   for all using (public.is_admin()) with check (public.is_admin());
 
+-- 3b) Table permissions (new Supabase projects do not grant these automatically).
+--     RLS above still decides who can actually see or change rows.
+grant usage on schema public to anon, authenticated;
+grant select on public.products to anon, authenticated;
+grant insert, update, delete on public.products to authenticated;
+grant select, insert, update, delete on public.product_secrets to authenticated;
+grant select on public.admins to authenticated;
+grant execute on function public.is_admin() to anon, authenticated;
+
 -- 4) AFTER you create your account (Authentication > Users > Add user), make it admin.
 --    Use the same email you created the account with:
 -- insert into public.admins (user_id)
