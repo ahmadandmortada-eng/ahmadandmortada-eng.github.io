@@ -111,6 +111,9 @@
   .page > main { margin:auto; max-width:min(420px,100%); }
   .page .bio { font-size:clamp(1.05rem,4vw,1.25rem); }
   #p2 .bio, #p3 .bio { margin-bottom:0; }
+  .shopbtn { display:inline-block; margin-top:26px; min-width:130px; padding:14px 30px; border-radius:999px; color:var(--text); font-size:1.2rem; font-style:italic; text-decoration:none;
+    border:1px solid color-mix(in srgb, var(--accent) 35%, #222); background:rgba(0,0,0,.55); transition:color .2s, border-color .2s, box-shadow .2s, transform .2s; }
+  .shopbtn:hover { color:#fff; border-color:var(--accent); box-shadow:0 0 22px var(--glow); transform:translateY(-3px); }
   .foot { margin-top:34px; padding-top:18px; border-top:1px solid color-mix(in srgb, var(--accent) 25%, #222); font-size:.95rem; color:var(--muted); line-height:1.8; }
   .foot a { color:var(--text); text-decoration:none; border-bottom:1px solid var(--glow); }
   .foot a:hover { color:#fff; border-color:var(--accent); }
@@ -218,7 +221,8 @@
 <section class="page" id="p2">
 <main>
   <h1>Shop</h1>
-  <p class="bio">Not set yet...</p>
+  <p class="bio">Usernames, gift cards &amp; digital products</p>
+  <a class="shopbtn" href="/browse">Browse</a>
 </main>
 </section>
 

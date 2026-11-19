@@ -3,62 +3,47 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Browse | Resemblanced</title>
-<meta name="description" content="Browse the Resemblance shop: usernames, gift cards and digital products.">
 <meta name="theme-color" content="#000000">
 <link rel="icon" href="/pfp.png">
 <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/shop.css">
+<title>Browse | Resemblanced</title>
+<meta name="description" content="Browse the Resemblance shop: usernames, gift cards and digital products.">
 </head>
 <body>
 <main class="wrap">
-  <div class="top"><a class="btn small" href="/">Return</a></div>
+  <div class="top"><a class="btn small" href="/">Return</a><a class="btn small" href="/account">Account</a></div>
   <h1>Browse</h1>
   <p class="sub">Usernames, gift cards &amp; digital products</p>
-
   <div class="chips" id="chips"></div>
   <p id="state" class="empty">Loading...</p>
   <div class="grid" id="grid"></div>
 </main>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="/config.js"></script>
 <script src="/theme.js"></script>
+<script src="/shop.js"></script>
 <script>
-  const $ = id => document.getElementById(id);
-  const LABEL = { tiktok_username:'TikTok username', instagram_username:'Instagram username', gift_card:'Gift card', digital_product:'Digital product' };
+  const $ = id => document.getElementById(id), { h, fmt, LABEL } = Shop;
   const CHIPS = [['all', 'All'], ['tiktok_username', 'TikTok'], ['instagram_username', 'Instagram'], ['gift_card', 'Gift cards'], ['digital_product', 'Digital']];
-  const fmt = n => Number(n).toLocaleString('en-US') + ' DA';
   let products = [], filter = 'all';
-
-  function h(tag, props = {}, ...kids) {
-    const e = document.createElement(tag);
-    for (const [k, v] of Object.entries(props)) { if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v); }
-    kids.flat().forEach(c => { if (c !== null && c !== undefined && c !== false) e.append(c instanceof Node ? c : document.createTextNode(c)); });
-    return e;
-  }
-  const safeUrl = u => { try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : null; } catch (e) { return null; } };
 
   function render() {
     const list = products.filter(p => filter === 'all' || p.category === filter);
     $('chips').replaceChildren(...CHIPS.map(([k, t]) => h('button', { class: 'chip' + (k === filter ? ' on' : ''), onclick: () => { filter = k; render(); } }, t)));
-    $('grid').replaceChildren(...list.map(p => {
-      const img = p.image_url && safeUrl(p.image_url);
-      return h('article', { class: 'card' + (p.is_sold ? ' sold' : '') },
-        img ? h('img', { src: img, alt: '', loading: 'lazy' }) : null,
-        h('span', { class: 'tag' }, LABEL[p.category] || p.category),
-        h('span', { class: 'name' }, p.title),
-        p.description ? h('span', { class: 'meta' }, p.description) : null,
-        h('span', { class: 'price' }, fmt(p.price_dzd)),
-        h('button', { class: 'btn', disabled: '' }, p.is_sold ? 'Sold' : 'Soon'));
-    }));
+    $('grid').replaceChildren(...list.map(p => h('article', { class: 'card' + (p.is_sold ? ' sold' : '') },
+      h('img', { src: Shop.productImage(p), alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }),
+      h('span', { class: 'tag' }, LABEL[p.category] || p.category),
+      h('span', { class: 'name' }, p.title),
+      p.description ? h('span', { class: 'meta' }, p.description) : null,
+      h('span', { class: 'price' }, fmt(p.price_dzd)),
+      p.is_sold ? h('button', { class: 'btn', disabled: '' }, 'Sold') : h('a', { class: 'btn', href: '/buy.html?p=' + encodeURIComponent(p.id), style: 'text-align:center' }, 'Buy'))));
     $('state').hidden = list.length > 0;
     if (!list.length) $('state').textContent = 'Nothing here yet.';
   }
-
   async function load() {
     if (!window.sbReady) { $('state').textContent = 'The shop is not connected: ' + (window.sbError || 'config.js did not load'); return; }
-    const { data, error } = await window.sb.from('products').select('*').eq('is_active', true).order('created_at', { ascending: false });
+    const { data, error } = await sb.from('products').select('*').eq('is_active', true).order('created_at', { ascending: false });
     if (error) { $('state').textContent = 'Could not load products: ' + error.message; return; }
     products = data; render();
   }

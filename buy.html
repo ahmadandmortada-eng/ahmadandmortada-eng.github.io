@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/pfp.png">
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shop.css">
+<title>Checkout | Resemblanced</title>
+</head>
+<body>
+<main class="wrap narrow">
+  <div class="top"><a class="btn small" href="/browse">Browse</a><a class="btn small" href="/account">Account</a></div>
+  <h1>Checkout</h1>
+  <p class="sub" id="sub"></p>
+  <p id="state" class="empty">Loading...</p>
+  <div id="view"></div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="/config.js"></script>
+<script src="/theme.js"></script>
+<script src="/shop.js"></script>
+<script>
+  const $ = id => document.getElementById(id), { h, fmt, say } = Shop;
+  const q = new URLSearchParams(location.search);
+  const COINS = [['btc', 'Bitcoin (BTC)'], ['ltc', 'Litecoin (LTC)'], ['eth', 'Ethereum (ETH)'], ['sol', 'Solana (SOL)'], ['usdttrc20', 'USDT (TRC20)'], ['usdterc20', 'USDT (ERC20)'], ['bnbbsc', 'BNB (BEP20 / BSC)']];
+  const COIN_NAME = Object.fromEntries(COINS);
+  const NETWORK = { usdttrc20: 'TRON (TRC20)', usdterc20: 'Ethereum (ERC20)', bnbbsc: 'BNB Smart Chain (BEP20)', btc: 'Bitcoin', ltc: 'Litecoin', eth: 'Ethereum', sol: 'Solana' };
+  let order = null, settings = {}, chooser = false, method = 'baridimob';
+  const view = () => $('view');
+  const fail = t => { $('state').hidden = false; $('state').textContent = t; $('state').className = 'msg err'; };
+  const kv = (k, v, copyable, text) => h('div', { class: 'kv' }, h('span', {}, k), copyable ? h('b', { class: 'mono' }, v, ' ', h('button', { class: 'btn small', onclick: e => Shop.copy(text ?? v, e.target) }, 'Copy')) : h('b', {}, v));
+
+  /* ---------- step 1: choose a payment method ---------- */
+  async function showProduct(id) {
+    const { data: p } = await sb.from('products').select('*').eq('id', id).maybeSingle();
+    if (!p || p.is_sold || !p.is_active) return fail('This item is no longer available.');
+    $('state').hidden = true; $('sub').textContent = p.title;
+    const opts = [['baridimob', 'Baridi Mob / Edahabia card', 'Transfer to our RIP, then upload your receipt'], ['crypto', 'Crypto', 'BTC, LTC, ETH, SOL, USDT, BNB (confirmed automatically)']];
+    const btns = opts.map(([k, t, s]) => h('button', { class: 'opt' + (k === method ? ' on' : ''), onclick: () => { method = k; btns.forEach((b, i) => b.classList.toggle('on', opts[i][0] === k)); } }, t, h('small', {}, s)));
+    const msg = h('p', { class: 'msg' });
+    const go = h('button', { class: 'btn' }, 'Continue');
+    go.addEventListener('click', async () => {
+      go.disabled = true; say(msg, '...');
+      const { data, error } = await sb.rpc('create_order', { p_product: p.id, p_method: method });
+      if (error) { go.disabled = false; return say(msg, error.message, 'err'); }
+      history.replaceState(null, '', location.pathname + '?o=' + data.id);
+      order = data; render();
+    });
+    view().replaceChildren(h('div', { class: 'panel' },
+      h('img', { src: Shop.productImage(p), alt: '', style: 'width:100%;border-radius:12px;aspect-ratio:16/10;object-fit:cover', referrerpolicy: 'no-referrer' }),
+      h('div', { class: 'kv' }, h('span', {}, 'Item'), h('b', {}, p.title)), h('div', { class: 'kv' }, h('span', {}, 'Price'), h('b', {}, fmt(p.price_dzd))),
+      h('label', {}, 'Payment method'), h('div', { class: 'opts' }, btns), go, msg));
+  }
+
+  /* ---------- order views ---------- */
+  async function render() {
+    $('state').hidden = true; $('sub').textContent = order.product_title + ' | ' + order.reference;
+    const box = h('div', { class: 'panel' });
+    box.append(kv('Item', order.product_title), kv('Amount', fmt(order.amount_dzd)), kv('Reference', order.reference, true));
+    if (order.status === 'paid') {
+      const { data } = await sb.rpc('get_delivery', { p_order: order.id });
+      box.append(h('p', { class: 'msg ok', style: 'margin-bottom:10px' }, 'Payment confirmed. Here is your order:'),
+        h('div', { class: 'pre' }, data || 'Your order is confirmed. The seller will send you the details shortly.'),
+        data ? h('p', { style: 'margin-top:12px' }, h('button', { class: 'btn small', onclick: e => Shop.copy(data, e.target) }, 'Copy')) : null);
+    } else if (['rejected', 'expired', 'cancelled'].includes(order.status)) {
+      box.append(h('p', { class: 'msg err' }, order.status === 'rejected' ? 'This payment was rejected. Contact us if you think this is a mistake.' : 'This order is no longer active.'),
+        h('p', { style: 'margin-top:14px' }, h('a', { class: 'btn small', href: '/browse' }, 'Back to the shop')));
+    } else if (order.method === 'baridimob') baridi(box); else crypto(box);
+    view().replaceChildren(box);
+  }
+
+  function baridi(box) {
+    if (order.status === 'awaiting_review') {
+      return box.append(h('p', { class: 'msg ok' }, 'Receipt received. We are checking your payment. This page updates by itself.'), order.tx_ref ? kv('Transaction no.', order.tx_ref) : null);
+    }
+    if (!settings.rip) return box.append(h('p', { class: 'msg err' }, 'Payment details are not set up yet. Please contact us.'));
+    const file = h('input', { type: 'file', accept: 'image/*' }), tx = h('input', { type: 'text', placeholder: 'Transaction number (optional)' });
+    const msg = h('p', { class: 'msg' }), send = h('button', { class: 'btn' }, 'Send receipt');
+    send.addEventListener('click', async () => {
+      const f = file.files[0];
+      if (!f) return say(msg, 'Choose the screenshot of your receipt.', 'err');
+      if (!f.type.startsWith('image/') || f.size > 5 * 1024 * 1024) return say(msg, 'The receipt must be an image under 5 MB.', 'err');
+      send.disabled = true; say(msg, 'Uploading...');
+      const s = await Shop.session(), ext = (f.name.split('.').pop() || 'jpg').replace(/[^a-z0-9]/gi, '').slice(0, 5) || 'jpg';
+      const path = `${s.user.id}/${order.id}-${Date.now()}.${ext}`;
+      const up = await sb.storage.from('receipts').upload(path, f, { contentType: f.type });
+      if (up.error) { send.disabled = false; return say(msg, up.error.message, 'err'); }
+      const r = await sb.rpc('submit_proof', { p_order: order.id, p_path: path, p_tx: tx.value });
+      if (r.error) { send.disabled = false; return say(msg, r.error.message, 'err'); }
+      await reload(true);
+    });
+    box.append(h('h2', { style: 'font-size:1.4rem;margin:22px 0 6px' }, 'Pay with Baridi Mob / Edahabia'),
+      kv('Send to RIP', settings.rip, true), settings.rip_name ? kv('Account name', settings.rip_name) : null,
+      kv('Exact amount', fmt(order.amount_dzd)),
+      h('p', { class: 'note' }, 'Transfer the exact amount, and put the reference ' + order.reference + ' in the note if the app allows it. Then upload the screenshot of the receipt.'),
+      h('label', {}, 'Receipt screenshot'), file, h('label', {}, 'Transaction number'), tx, h('p', { style: 'margin-top:16px' }, send), msg);
+  }
+
+  function crypto(box) {
+    const msg = h('p', { class: 'msg' });
+    if (order.pay_address && !chooser) {
+      const st = order.provider_status || 'waiting';
+      const label = { waiting: 'Waiting for your payment...', confirming: 'Payment seen on the network, confirming...', confirmed: 'Confirmed, finishing...', sending: 'Finishing...', partially_paid: 'Partial payment received. Please send the remaining amount or contact us.', failed: 'Payment failed.', expired: 'Payment expired.' }[st] || st;
+      return box.append(h('h2', { style: 'font-size:1.4rem;margin:22px 0 6px' }, 'Pay with ' + (COIN_NAME[order.crypto_currency] || order.crypto_currency)),
+        kv('Send exactly', order.pay_amount + ' ' + (order.crypto_currency || '').toUpperCase().replace('TRC20', '').replace('ERC20', '').replace('BSC', ''), true, String(order.pay_amount)),
+        kv('To address', order.pay_address, true), kv('Network', NETWORK[order.crypto_currency] || '-'),
+        h('p', { class: 'msg', style: 'margin-top:14px' }, label),
+        h('p', { class: 'note' }, 'Send only on the network shown above, with the exact amount. Your order is confirmed automatically once the payment arrives. You can keep this page open or come back from your account.'),
+        h('p', { style: 'margin-top:14px' }, h('button', { class: 'btn small', onclick: () => { chooser = true; render(); } }, 'Use another currency')));
+    }
+    const pick = COINS.map(([k, t]) => h('button', { class: 'opt', onclick: async e => {
+      [...pick].forEach(b => b.disabled = true); say(msg, 'Creating the payment address...');
+      const { data, error } = await sb.functions.invoke('crypto-create', { body: { order_id: order.id, pay_currency: k } });
+      if (error || (data && data.error)) { [...pick].forEach(b => b.disabled = false); let m = (data && data.error) || error.message; try { if (error.context) m = (await error.context.json()).error || m; } catch (_) {} return say(msg, m, 'err'); }
+      chooser = false; await reload(true);
+    } }, t));
+    box.append(h('h2', { style: 'font-size:1.4rem;margin:22px 0 6px' }, 'Choose a currency'), h('div', { class: 'opts' }, pick), msg);
+  }
+
+  async function reload(force) {
+    const { data } = await sb.from('orders').select('*').eq('id', order.id).maybeSingle();
+    if (!data) return;
+    const changed = force || data.status !== order.status || data.provider_status !== order.provider_status;
+    order = data; if (changed) render();
+  }
+
+  async function main() {
+    if (!Shop.needClient($('state'))) return;
+    const s = await Shop.session();
+    if (!s) return location.replace('/login.html?next=' + encodeURIComponent(location.pathname + location.search));
+    const { data: st } = await sb.from('settings').select('*');
+    (st || []).forEach(r => settings[r.key] = r.value);
+    if (q.get('o')) {
+      const { data } = await sb.from('orders').select('*').eq('id', q.get('o')).maybeSingle();
+      if (!data) return fail('Order not found.');
+      order = data; await render();
+      setInterval(() => { if (!document.hidden && ['pending', 'awaiting_review'].includes(order.status)) reload(false); }, 6000);
+    } else if (q.get('p')) await showProduct(q.get('p'));
+    else location.replace('/browse');
+  }
+  main().catch(e => fail('Error: ' + e.message));
+</script>
+</body>
+</html>

@@ -30,6 +30,7 @@
   <!-- signed in but not an admin -->
   <section id="denied" class="panel narrow" style="margin:0 auto;text-align:center" hidden>
     <p>This account is not an admin.</p>
+    <p class="msg" id="deniedWho" style="overflow-wrap:anywhere"></p>
     <p style="margin-top:16px"><button class="btn" data-logout>Logout</button></p>
   </section>
 
@@ -52,7 +53,7 @@
       <label for="price">Price (DA)</label>
       <input id="price" type="number" min="0" step="1" inputmode="numeric">
 
-      <label for="img">Image link (optional)</label>
+      <label for="img">Image link (optional, an automatic image is used if empty)</label>
       <input id="img" type="url" placeholder="https://...">
 
       <label for="secret">Delivery content (hidden, sent to the buyer after payment)</label>
@@ -66,12 +67,28 @@
 
     <h2>Products</h2>
     <div class="panel" id="list"></div>
+
+    <h2>Orders</h2>
+    <div class="panel" id="orders"></div>
+
+    <h2>Payment settings</h2>
+    <div class="panel">
+      <label for="s_rip">Baridi Mob / Edahabia RIP</label>
+      <input id="s_rip" type="text" inputmode="numeric" placeholder="00799999...">
+      <label for="s_name">Account holder name</label>
+      <input id="s_name" type="text">
+      <label for="s_rate">Exchange rate: how many DA for 1 USD (used for crypto prices)</label>
+      <input id="s_rate" type="number" min="1" step="0.01">
+      <p style="margin-top:18px"><button class="btn" id="saveSettings">Save settings</button></p>
+      <p class="msg" id="settingsMsg"></p>
+    </div>
   </section>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="/config.js"></script>
 <script src="/theme.js"></script>
+<script src="/shop.js"></script>
 <script>
   const $ = id => document.getElementById(id);
   const sb = window.sb;
@@ -166,13 +183,49 @@
     });
   }
 
+  /* ---------- orders + settings ---------- */
+  const STATUS = { pending: 'waiting', awaiting_review: 'review', paid: 'paid', rejected: 'rejected', expired: 'expired', cancelled: 'cancelled' };
+  async function loadOrders() {
+    const { data, error } = await sb.from('orders').select('*').order('created_at', { ascending: false }).limit(50);
+    const box = $('orders'); box.replaceChildren();
+    if (error) return box.append(h('p', { class: 'msg err' }, error.message));
+    if (!data.length) return box.append(h('p', { class: 'empty' }, 'No orders yet.'));
+    const decide = async (o, status) => {
+      if (!confirm((status === 'paid' ? 'Mark as paid: ' : 'Reject: ') + o.product_title + ' (' + o.reference + ')?')) return;
+      const r = await sb.rpc('admin_set_order', { p_order: o.id, p_status: status }); if (r.error) alert(r.error.message); loadOrders(); loadProducts();
+    };
+    data.forEach(o => {
+      const open = ['pending', 'awaiting_review', 'expired'].includes(o.status);
+      box.append(h('div', { class: 'row' },
+        h('div', {}, h('div', { class: 't' }, o.product_title, h('span', { class: 'pill' + (o.status === 'paid' ? ' ok' : o.status === 'rejected' ? ' bad' : '') }, STATUS[o.status] || o.status)),
+          h('div', { class: 'c' }, [o.user_email, o.method === 'crypto' ? 'crypto ' + (o.crypto_currency || '-') + (o.provider_status ? ' (' + o.provider_status + ')' : '') : 'Baridi Mob', o.reference, Shop.dt(o.created_at)].filter(Boolean).join(' | ')),
+          o.tx_ref ? h('div', { class: 'c' }, 'Transaction: ' + o.tx_ref) : null),
+        h('div', { class: 't' }, fmt(o.amount_dzd)),
+        h('div', { class: 'acts' },
+          o.proof_path ? h('button', { class: 'btn small', onclick: async () => { const r = await sb.storage.from('receipts').createSignedUrl(o.proof_path, 120); if (r.error) alert(r.error.message); else window.open(r.data.signedUrl, '_blank', 'noopener'); } }, 'View receipt') : null,
+          open ? h('button', { class: 'btn small', onclick: () => decide(o, 'paid') }, o.method === 'crypto' ? 'Mark paid' : 'Approve') : null,
+          open && o.status !== 'expired' ? h('button', { class: 'btn small danger', onclick: () => decide(o, 'rejected') }, 'Reject') : null)));
+    });
+  }
+  async function loadSettings() {
+    const { data } = await sb.from('settings').select('*'); const s = {}; (data || []).forEach(r => s[r.key] = r.value);
+    $('s_rip').value = s.rip || ''; $('s_name').value = s.rip_name || ''; $('s_rate').value = s.dzd_per_usd || '';
+  }
+  $('saveSettings').addEventListener('click', async () => {
+    const rate = parseFloat($('s_rate').value);
+    if (!(rate > 0)) return say($('settingsMsg'), 'Enter a valid exchange rate.', 'err');
+    const r = await sb.from('settings').upsert([{ key: 'rip', value: $('s_rip').value.trim() }, { key: 'rip_name', value: $('s_name').value.trim() }, { key: 'dzd_per_usd', value: String(rate) }]);
+    say($('settingsMsg'), r.error ? r.error.message : 'Saved.', r.error ? 'err' : 'ok');
+  });
+
   /* ---------- auth ---------- */
   async function route(session) {
     if (!session) return show('login');
-    const { data } = await sb.from('admins').select('user_id').eq('user_id', session.user.id).maybeSingle();
-    if (!data) return show('denied');
+    const { data, error } = await sb.from('admins').select('user_id').eq('user_id', session.user.id).maybeSingle();
+    if (error) { fail('Error: ' + error.message); return show('denied'); }
+    if (!data) { $('deniedWho').textContent = session.user.email + ' | id: ' + session.user.id; return show('denied'); }
     $('who').textContent = 'Signed in as ' + session.user.email;
-    show('panel'); renderFields(); loadProducts();
+    show('panel'); renderFields(); loadProducts(); loadOrders(); loadSettings();
   }
   $('loginBtn').addEventListener('click', async () => {
     say($('loginMsg'), '');
