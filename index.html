@@ -90,7 +90,7 @@
   }
   #gate.show { display:flex; }
   #mute {
-    position:fixed; bottom:calc(18px + env(safe-area-inset-bottom,0px)); right:calc(18px + env(safe-area-inset-right,0px)); z-index:5; width:44px; height:44px; border-radius:50%;
+    position:fixed; bottom:calc(18px + env(safe-area-inset-bottom,0px)); right:calc(18px + env(safe-area-inset-right,0px)); z-index:10; width:44px; height:44px; border-radius:50%;
     background:rgba(0,0,0,.55); border:1px solid color-mix(in srgb, var(--accent) 35%, #222);
     color:var(--muted); cursor:pointer; font-size:1rem;
   }
@@ -159,10 +159,23 @@
   #menu {
     position:fixed; inset:0; z-index:8; display:flex; align-items:center; justify-content:center;
     background:radial-gradient(ellipse at 50% 35%, var(--bg-center) 0%, var(--bg-edge) 75%);
-    visibility:hidden; clip-path:circle(0 at 40px 40px);
+    visibility:hidden; clip-path:circle(0 at var(--o,40px 40px)); overflow-y:auto;
     transition:clip-path .7s cubic-bezier(.7,0,.2,1), visibility 0s .7s;
   }
-  .menu-open #menu { visibility:visible; clip-path:circle(150% at 40px 40px); transition:clip-path .8s cubic-bezier(.7,0,.2,1), visibility 0s; }
+  .menu-open #menu { visibility:visible; clip-path:circle(150% at var(--o,40px 40px)); transition:clip-path .8s cubic-bezier(.7,0,.2,1), visibility 0s; }
+  .landing #menuBtn { opacity:0; pointer-events:none; }                 /* the menu is the home screen: nothing to close yet */
+  .landing:not(.menu-open) #pages { visibility:hidden; }
+  .mwrap { margin:auto; padding:28px 24px; display:flex; flex-direction:column; align-items:center; }
+  #menu .rv { opacity:0; transform:translateY(18px); transition:opacity .6s, transform .6s; }
+  .menu-open #menu .rv { opacity:1; transform:none; transition-delay:var(--d), var(--d); }
+  .mpfp { width:84px; height:84px; border-radius:50%; object-fit:cover; background:#111; margin-bottom:16px;
+          border:2px solid var(--accent); box-shadow:0 0 0 5px var(--bg-edge), 0 0 0 6px var(--accent), 0 0 34px var(--glow); }
+  .mbrand { font-family:"UnifrakturCook","Times New Roman",serif; font-size:1.6rem; text-shadow:0 0 18px var(--glow); }
+  .mlabel { display:flex; align-items:center; gap:14px; margin:10px 0 clamp(18px,4vh,34px); font-style:italic; font-size:.95rem; letter-spacing:.45em; text-indent:.45em; color:var(--muted); text-transform:uppercase; }
+  .mlabel i { display:block; width:clamp(24px,8vw,44px); height:1px; background:linear-gradient(90deg, transparent, var(--accent)); }
+  .mlabel i:last-child { transform:scaleX(-1); }
+  .mfoot { margin-top:clamp(24px,5vh,44px); font-size:.95rem; color:var(--muted); letter-spacing:.08em; }
+  @media (max-height:600px) { .mpfp { display:none; } .mbrand { font-size:1.35rem; } }
   #menu nav { display:flex; flex-direction:column; align-items:center; gap:clamp(14px,3.5vh,26px); }
   #menu nav button {
     background:none; border:0; padding:6px 14px; cursor:pointer; color:var(--muted);
@@ -181,7 +194,7 @@
   }
 </style>
 </head>
-<body>
+<body class="landing">
 <button id="gate">Enter</button>
 <canvas id="fx"></canvas>
 
@@ -224,18 +237,24 @@
 </div>
 
 <nav class="dots" aria-label="Pages">
-  <button class="on" aria-label="Links"></button>
+  <button class="on" aria-label="Contact"></button>
   <button aria-label="Shop"></button>
-  <button aria-label="Message"></button>
+  <button aria-label="Learn more"></button>
 </nav>
 
 <button id="menuBtn" aria-label="Menu" aria-expanded="false" aria-controls="menu"><span></span><span></span><span></span></button>
 <div id="menu" aria-hidden="true">
-  <nav aria-label="Main menu">
-    <button data-i="0" class="on" style="--d:.55s"><small>01</small>Home</button>
-    <button data-i="1" style="--d:.7s"><small>02</small>Shop</button>
-    <button data-i="2" style="--d:.85s"><small>03</small>Contact</button>
-  </nav>
+  <div class="mwrap">
+    <img class="rv mpfp" src="pfp.png" alt="" style="--d:.45s">
+    <p class="rv mbrand" style="--d:.6s">resemblanced</p>
+    <p class="rv mlabel" style="--d:.75s"><i></i>Main Menu<i></i></p>
+    <nav aria-label="Main menu">
+      <button data-i="0" style="--d:.95s"><small>01</small>Contact</button>
+      <button data-i="1" style="--d:1.1s"><small>02</small>Shop</button>
+      <button data-i="2" style="--d:1.25s"><small>03</small>Learn more</button>
+    </nav>
+    <p class="rv mfoot" style="--d:1.5s">&copy; 2026 Resemblance</p>
+  </div>
 </div>
 
 <button id="mute" aria-label="Mute"><i class="fa-solid fa-volume-high"></i></button>
@@ -419,22 +438,30 @@
     pagesEl.scrollTo({ left: i * pagesEl.clientWidth });
   });
 
-  /* ---------- Main menu ---------- */
+  /* ---------- Main menu (the home screen) ---------- */
   const menuBtn = document.getElementById('menuBtn'), menuEl = document.getElementById('menu');
-  const menuItems = [...menuEl.querySelectorAll('button')];
+  const menuItems = [...menuEl.querySelectorAll('nav button')];
+  const curPage = () => Math.round(pagesEl.scrollLeft / pagesEl.clientWidth);
+  const markActive = () => menuItems.forEach((b, k) => b.classList.toggle('on', !document.body.classList.contains('landing') && k === curPage()));
   function setMenu(open) {
     document.body.classList.toggle('menu-open', open);
     menuBtn.setAttribute('aria-expanded', open);
     menuEl.setAttribute('aria-hidden', !open);
     pagesEl.inert = open;
+    if (open) markActive();
   }
   menuBtn.addEventListener('click', () => setMenu(!document.body.classList.contains('menu-open')));
-  menuItems.forEach(b => b.addEventListener('click', () => { setMenu(false); goTo(+b.dataset.i); }));
-  addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(false); });
-  pagesEl.addEventListener('scroll', () => {
-    const i = Math.round(pagesEl.scrollLeft / pagesEl.clientWidth);
-    menuItems.forEach((b, k) => b.classList.toggle('on', k === i));
-  }, { passive: true });
+  menuItems.forEach(b => b.addEventListener('click', () => {
+    menuEl.style.removeProperty('--o');                        // later opens/closes start from the menu button
+    document.body.classList.remove('landing');
+    pagesEl.scrollTo({ left: +b.dataset.i * pagesEl.clientWidth, behavior: 'instant' });
+    setMenu(false);
+  }));
+  pagesEl.addEventListener('scroll', markActive, { passive: true });
+  /* the site opens on the menu: it spreads from the center, then the items appear one by one */
+  menuEl.style.setProperty('--o', '50% 50%');
+  pagesEl.inert = true;
+  requestAnimationFrame(() => requestAnimationFrame(() => setMenu(true)));
 
   /* mouse drag (desktop) */
   (function () {
