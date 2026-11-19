@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Admin | Resemblanced</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="/pfp.png">
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shop.css">
+</head>
+<body>
+<main class="wrap">
+  <h1>Admin</h1>
+  <p class="sub">Products &amp; prices</p>
+
+  <p id="setup" class="msg err" hidden>Supabase is not connected yet. Fill in config.js first.</p>
+
+  <!-- login -->
+  <section id="login" class="panel narrow" style="margin:0 auto" hidden>
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="username">
+    <label for="pass">Password</label>
+    <input id="pass" type="password" autocomplete="current-password">
+    <p style="margin-top:18px"><button class="btn" id="loginBtn">Login</button></p>
+    <p class="msg" id="loginMsg"></p>
+  </section>
+
+  <!-- signed in but not an admin -->
+  <section id="denied" class="panel narrow" style="margin:0 auto;text-align:center" hidden>
+    <p>This account is not an admin.</p>
+    <p style="margin-top:16px"><button class="btn" data-logout>Logout</button></p>
+  </section>
+
+  <!-- panel -->
+  <section id="panel" hidden>
+    <div class="top"><span id="who"></span><button class="btn small" data-logout>Logout</button></div>
+
+    <h2>Add product</h2>
+    <div class="panel">
+      <label for="cat">Type</label>
+      <select id="cat">
+        <option value="tiktok_username">TikTok username</option>
+        <option value="instagram_username">Instagram username</option>
+        <option value="gift_card">Gift card</option>
+        <option value="digital_product">Digital product</option>
+      </select>
+
+      <div id="fields"></div>
+
+      <label for="price">Price (DA)</label>
+      <input id="price" type="number" min="0" step="1" inputmode="numeric">
+
+      <label for="img">Image link (optional)</label>
+      <input id="img" type="url" placeholder="https://...">
+
+      <label for="secret">Delivery content (hidden, sent to the buyer after payment)</label>
+      <textarea id="secret" placeholder="Code, account details, login..."></textarea>
+
+      <label class="check"><input type="checkbox" id="active" checked> Visible in the shop</label>
+
+      <p style="margin-top:18px"><button class="btn" id="addBtn">Add product</button></p>
+      <p class="msg" id="addMsg"></p>
+    </div>
+
+    <h2>Products</h2>
+    <div class="panel" id="list"></div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="/config.js"></script>
+<script src="/theme.js"></script>
+<script>
+  const $ = id => document.getElementById(id);
+  const sb = window.sb;
+  const LABEL = { tiktok_username:'TikTok username', instagram_username:'Instagram username', gift_card:'Gift card', digital_product:'Digital product' };
+  const fmt = n => Number(n).toLocaleString('en-US') + ' DA';
+
+  /* tiny DOM helper (no innerHTML, so nothing typed can run as code) */
+  function h(tag, props = {}, ...kids) {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) {
+      if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v);
+    }
+    kids.flat().forEach(c => e.append(c instanceof Node ? c : document.createTextNode(c)));
+    return e;
+  }
+  const say = (el, text, kind) => { el.textContent = text; el.className = 'msg' + (kind ? ' ' + kind : ''); };
+  const show = name => ['login', 'denied', 'panel'].forEach(n => $(n).hidden = n !== name);
+
+  /* ---------- templates per type ---------- */
+  const BRANDS = ['Steam', 'PlayStation', 'Xbox', 'Google Play', 'Apple / iTunes', 'Netflix', 'Amazon', 'Other'];
+  function field(id, label, type = 'text', ph = '') { return [h('label', { for: id }, label), h('input', { id, type, placeholder: ph })]; }
+  function renderFields() {
+    const c = $('cat').value, box = $('fields'); box.replaceChildren();
+    if (c === 'tiktok_username' || c === 'instagram_username') {
+      box.append(...field('f_handle', 'Username (without @)'), ...field('f_note', 'Note (optional)'));
+    } else if (c === 'gift_card') {
+      box.append(h('label', { for: 'f_brand' }, 'Brand'),
+        h('select', { id: 'f_brand' }, BRANDS.map(b => h('option', { value: b }, b))),
+        ...field('f_value', 'Value', 'text', 'e.g. $20'), ...field('f_region', 'Region', 'text', 'e.g. US, EU, Global'));
+    } else {
+      box.append(...field('f_title', 'Title'), h('label', { for: 'f_desc' }, 'Description'), h('textarea', { id: 'f_desc' }));
+    }
+  }
+  $('cat').addEventListener('change', renderFields);
+
+  function readForm() {
+    const c = $('cat').value, v = id => ($(id)?.value || '').trim();
+    let title, description = null, details = {};
+    if (c === 'tiktok_username' || c === 'instagram_username') {
+      const handle = v('f_handle').replace(/^@+/, '');
+      if (!handle) throw new Error('Enter the username.');
+      title = '@' + handle; details = { handle, note: v('f_note') };
+      description = v('f_note') || null;
+    } else if (c === 'gift_card') {
+      const brand = v('f_brand'), value = v('f_value'), region = v('f_region');
+      if (!value) throw new Error('Enter the card value.');
+      title = `${brand} ${value}`; details = { brand, value, region };
+      description = region ? 'Region: ' + region : null;
+    } else {
+      title = v('f_title'); description = v('f_desc') || null;
+      if (!title) throw new Error('Enter a title.');
+    }
+    const price = parseInt($('price').value, 10);
+    if (!Number.isInteger(price) || price < 0) throw new Error('Enter a valid price.');
+    return { row: { category: c, title, description, price_dzd: price, image_url: v('img') || null, details, is_active: $('active').checked }, secret: $('secret').value.trim() };
+  }
+
+  $('addBtn').addEventListener('click', async () => {
+    const msg = $('addMsg'); say(msg, '');
+    let data; try { data = readForm(); } catch (e) { return say(msg, e.message, 'err'); }
+    $('addBtn').disabled = true;
+    const { data: p, error } = await sb.from('products').insert(data.row).select().single();
+    if (error) { $('addBtn').disabled = false; return say(msg, 'Could not add: ' + error.message, 'err'); }
+    if (data.secret) {
+      const r = await sb.from('product_secrets').insert({ product_id: p.id, content: data.secret });
+      if (r.error) say(msg, 'Product added, but the delivery content failed: ' + r.error.message, 'err');
+      else say(msg, 'Product added.', 'ok');
+    } else say(msg, 'Product added.', 'ok');
+    $('addBtn').disabled = false;
+    ['price', 'img', 'secret'].forEach(i => $(i).value = ''); renderFields();
+    loadProducts();
+  });
+
+  /* ---------- list / edit ---------- */
+  async function loadProducts() {
+    const { data, error } = await sb.from('products').select('*').order('created_at', { ascending: false });
+    const box = $('list'); box.replaceChildren();
+    if (error) return box.append(h('p', { class: 'msg err' }, error.message));
+    if (!data.length) return box.append(h('p', { class: 'empty' }, 'No products yet.'));
+    data.forEach(p => {
+      const price = h('input', { type: 'number', min: '0', step: '1', value: p.price_dzd, 'aria-label': 'Price' });
+      const act = async (patch) => { const r = await sb.from('products').update(patch).eq('id', p.id); if (r.error) alert(r.error.message); loadProducts(); };
+      box.append(h('div', { class: 'row' },
+        h('div', {}, h('div', { class: 't' }, p.title, p.is_sold ? h('span', { class: 'pill' }, 'sold') : '', p.is_active ? '' : h('span', { class: 'pill' }, 'hidden')),
+          h('div', { class: 'c' }, LABEL[p.category] || p.category)),
+        h('div', { class: 't' }, fmt(p.price_dzd)),
+        h('div', { class: 'acts' }, price,
+          h('button', { class: 'btn small', onclick: () => { const n = parseInt(price.value, 10); if (Number.isInteger(n) && n >= 0) act({ price_dzd: n }); else alert('Invalid price'); } }, 'Save price'),
+          h('button', { class: 'btn small', onclick: () => act({ is_active: !p.is_active }) }, p.is_active ? 'Hide' : 'Show'),
+          h('button', { class: 'btn small', onclick: () => act({ is_sold: !p.is_sold }) }, p.is_sold ? 'Unmark sold' : 'Mark sold'),
+          h('button', { class: 'btn small danger', onclick: async () => { if (confirm('Delete "' + p.title + '"?')) { const r = await sb.from('products').delete().eq('id', p.id); if (r.error) alert(r.error.message); loadProducts(); } } }, 'Delete'))));
+    });
+  }
+
+  /* ---------- auth ---------- */
+  async function route(session) {
+    if (!session) return show('login');
+    const { data } = await sb.from('admins').select('user_id').eq('user_id', session.user.id).maybeSingle();
+    if (!data) return show('denied');
+    $('who').textContent = 'Signed in as ' + session.user.email;
+    show('panel'); renderFields(); loadProducts();
+  }
+  $('loginBtn').addEventListener('click', async () => {
+    say($('loginMsg'), '');
+    const { error } = await sb.auth.signInWithPassword({ email: $('email').value.trim(), password: $('pass').value });
+    if (error) say($('loginMsg'), error.message, 'err');
+  });
+  $('pass').addEventListener('keydown', e => { if (e.key === 'Enter') $('loginBtn').click(); });
+  document.querySelectorAll('[data-logout]').forEach(b => b.addEventListener('click', () => sb.auth.signOut()));
+
+  const fail = text => { $('setup').textContent = text; $('setup').hidden = false; };
+  addEventListener('error', e => fail('Error: ' + e.message));
+  addEventListener('unhandledrejection', e => fail('Error: ' + (e.reason && e.reason.message || e.reason)));
+
+  if (!window.sbReady) fail('Supabase is not connected: ' + (window.sbError || 'config.js did not load (is it next to index.html?)'));
+  else {
+    sb.auth.onAuthStateChange((_e, session) => setTimeout(() => route(session).catch(e => fail('Error: ' + e.message)), 0));
+    sb.auth.getSession().then(({ data }) => route(data.session)).catch(e => fail('Error: ' + e.message));
+  }
+</script>
+</body>
+</html>
