@@ -38,7 +38,7 @@
       h('span', { class: 'name' }, p.title),
       p.description ? h('span', { class: 'meta' }, p.description) : null,
       h('span', { class: 'price' }, fmt(p.price_dzd)),
-      p.available > 0 && p.available <= 5 ? h('span', { class: 'meta' }, p.available + ' left') : null,
+      h('span', { class: 'meta' }, p.available + ' available | ' + (p.sold || 0) + ' sold'),
       p.available <= 0 ? h('button', { class: 'btn', disabled: '' }, 'Sold out') : h('a', { class: 'btn', href: '/buy.html?p=' + encodeURIComponent(p.id), style: 'text-align:center' }, 'Buy'))));
     $('state').hidden = list.length > 0;
     if (!list.length) $('state').textContent = 'Nothing here yet.';
