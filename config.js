@@ -1,7 +1,7 @@
 // Paste your Supabase values (Project Settings > API).
 // The anon key is PUBLIC by design. NEVER paste the "service_role" key here.
-window.SUPABASE_URL = 'PASTE_PROJECT_URL_HERE';
-window.SUPABASE_ANON_KEY = 'PASTE_ANON_KEY_HERE';
+window.SUPABASE_URL = 'sb_publishable_T6kzMgk-lKurMDHY2ojy4Q_Kvpoo7Sm';
+window.SUPABASE_ANON_KEY = 'sb_publishable_T6kzMgk-lKurMDHY2ojy4Q_Kvpoo7Sm';
 
 window.sbReady = false; window.sbError = ''; window.sb = null;
 try {
