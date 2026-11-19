@@ -23,6 +23,7 @@
 <script src="/config.js"></script>
 <script src="/theme.js"></script>
 <script src="/shop.js"></script>
+<script>if (typeof Shop === 'undefined') addEventListener('DOMContentLoaded', () => { const e = document.getElementById('state') || document.getElementById('list') || document.getElementById('msg'); if (e) e.textContent = 'Error: shop.js did not load. Upload shop.js next to index.html on GitHub.'; });</script>
 <script>
   const $ = id => document.getElementById(id), { h, fmt, LABEL } = Shop;
   const CHIPS = [['all', 'All'], ['tiktok_username', 'TikTok'], ['instagram_username', 'Instagram'], ['gift_card', 'Gift cards'], ['digital_product', 'Digital']];
@@ -31,19 +32,20 @@
   function render() {
     const list = products.filter(p => filter === 'all' || p.category === filter);
     $('chips').replaceChildren(...CHIPS.map(([k, t]) => h('button', { class: 'chip' + (k === filter ? ' on' : ''), onclick: () => { filter = k; render(); } }, t)));
-    $('grid').replaceChildren(...list.map(p => h('article', { class: 'card' + (p.is_sold ? ' sold' : '') },
+    $('grid').replaceChildren(...list.map(p => h('article', { class: 'card' + (p.available <= 0 ? ' sold' : '') },
       h('img', { src: Shop.productImage(p), alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }),
       h('span', { class: 'tag' }, LABEL[p.category] || p.category),
       h('span', { class: 'name' }, p.title),
       p.description ? h('span', { class: 'meta' }, p.description) : null,
       h('span', { class: 'price' }, fmt(p.price_dzd)),
-      p.is_sold ? h('button', { class: 'btn', disabled: '' }, 'Sold') : h('a', { class: 'btn', href: '/buy.html?p=' + encodeURIComponent(p.id), style: 'text-align:center' }, 'Buy'))));
+      p.available > 0 && p.available <= 5 ? h('span', { class: 'meta' }, p.available + ' left') : null,
+      p.available <= 0 ? h('button', { class: 'btn', disabled: '' }, 'Sold out') : h('a', { class: 'btn', href: '/buy.html?p=' + encodeURIComponent(p.id), style: 'text-align:center' }, 'Buy'))));
     $('state').hidden = list.length > 0;
     if (!list.length) $('state').textContent = 'Nothing here yet.';
   }
   async function load() {
     if (!window.sbReady) { $('state').textContent = 'The shop is not connected: ' + (window.sbError || 'config.js did not load'); return; }
-    const { data, error } = await sb.from('products').select('*').eq('is_active', true).order('created_at', { ascending: false });
+    const { data, error } = await sb.from('products_public').select('*').order('created_at', { ascending: false });
     if (error) { $('state').textContent = 'Could not load products: ' + error.message; return; }
     products = data; render();
   }

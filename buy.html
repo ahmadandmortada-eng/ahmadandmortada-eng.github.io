@@ -22,6 +22,7 @@
 <script src="/config.js"></script>
 <script src="/theme.js"></script>
 <script src="/shop.js"></script>
+<script>if (typeof Shop === 'undefined') addEventListener('DOMContentLoaded', () => { const e = document.getElementById('state') || document.getElementById('list') || document.getElementById('msg'); if (e) e.textContent = 'Error: shop.js did not load. Upload shop.js next to index.html on GitHub.'; });</script>
 <script>
   const $ = id => document.getElementById(id), { h, fmt, say } = Shop;
   const q = new URLSearchParams(location.search);
@@ -35,8 +36,8 @@
 
   /* ---------- step 1: choose a payment method ---------- */
   async function showProduct(id) {
-    const { data: p } = await sb.from('products').select('*').eq('id', id).maybeSingle();
-    if (!p || p.is_sold || !p.is_active) return fail('This item is no longer available.');
+    const { data: p } = await sb.from('products_public').select('*').eq('id', id).maybeSingle();
+    if (!p || p.available <= 0) return fail('This item is sold out or no longer available.');
     $('state').hidden = true; $('sub').textContent = p.title;
     const opts = [['baridimob', 'Baridi Mob / Edahabia card', 'Transfer to our RIP, then upload your receipt'], ['crypto', 'Crypto', 'BTC, LTC, ETH, SOL, USDT, BNB (confirmed automatically)']];
     const btns = opts.map(([k, t, s]) => h('button', { class: 'opt' + (k === method ? ' on' : ''), onclick: () => { method = k; btns.forEach((b, i) => b.classList.toggle('on', opts[i][0] === k)); } }, t, h('small', {}, s)));
