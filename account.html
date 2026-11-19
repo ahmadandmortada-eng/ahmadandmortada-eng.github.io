@@ -22,6 +22,7 @@
 <script src="/config.js"></script>
 <script src="/theme.js"></script>
 <script src="/shop.js"></script>
+<script>if (typeof Shop === 'undefined') addEventListener('DOMContentLoaded', () => { const e = document.getElementById('state') || document.getElementById('list') || document.getElementById('msg'); if (e) e.textContent = 'Error: shop.js did not load. Upload shop.js next to index.html on GitHub.'; });</script>
 <script>
   const $ = id => document.getElementById(id), { h, fmt } = Shop;
   const TXT = { pending: 'waiting for payment', awaiting_review: 'under review', paid: 'paid', rejected: 'rejected', expired: 'expired', cancelled: 'cancelled' };
@@ -39,7 +40,14 @@
       h('div', {}, h('div', { class: 't' }, o.product_title, h('span', { class: 'pill' + (o.status === 'paid' ? ' ok' : o.status === 'rejected' ? ' bad' : '') }, TXT[o.status] || o.status)),
         h('div', { class: 'c' }, o.reference + ' | ' + Shop.dt(o.created_at))),
       h('div', { class: 't' }, fmt(o.amount_dzd)),
-      h('div', { class: 'acts' }, h('a', { class: 'btn small', href: '/buy.html?o=' + encodeURIComponent(o.id) }, o.status === 'paid' ? 'View delivery' : o.status === 'pending' || o.status === 'awaiting_review' ? 'Continue' : 'Details')))));
+      h('div', { class: 'acts' }, h('a', { class: 'btn small', href: '/buy.html?o=' + encodeURIComponent(o.id) }, o.status === 'paid' ? 'View delivery' : o.status === 'pending' || o.status === 'awaiting_review' ? 'Continue' : 'Details'),
+        ['paid', 'awaiting_review'].includes(o.status) ? null : h('button', { class: 'btn small danger', onclick: async () => {
+          if (!confirm('Delete this order (' + o.reference + ')?')) return;
+          const r = await sb.rpc('delete_order', { p_order: o.id });
+          if (r.error) return alert(r.error.message);
+          if (o.proof_path) sb.storage.from('receipts').remove([o.proof_path]);
+          location.reload();
+        } }, 'Delete')))));
   })().catch(e => { $('list').textContent = 'Error: ' + e.message; });
 </script>
 </body>
