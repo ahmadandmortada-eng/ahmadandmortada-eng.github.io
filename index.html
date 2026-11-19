@@ -164,7 +164,7 @@
   }
   .menu-open #menu { visibility:visible; clip-path:circle(150% at var(--o,40px 40px)); transition:clip-path .8s cubic-bezier(.7,0,.2,1), visibility 0s; }
   .landing #menuBtn { opacity:0; pointer-events:none; }                 /* the menu is the home screen: nothing to close yet */
-  .landing:not(.menu-open) #pages { visibility:hidden; }
+  .landing #pages { visibility:hidden; }          /* keep every page hidden until the visitor picks something from the menu */
   .mwrap { margin:auto; padding:28px 24px; display:flex; flex-direction:column; align-items:center; }
   #menu .rv { opacity:0; transform:translateY(18px); transition:opacity .6s, transform .6s; }
   .menu-open #menu .rv { opacity:1; transform:none; transition-delay:var(--d), var(--d); }
