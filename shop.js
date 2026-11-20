@@ -32,6 +32,23 @@
     return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
   }
 
+
+  /* product cover: your image if you set one, otherwise an automatic cover (same size and style for every product) */
+  function cover(p) {
+    const custom = p.image_url && safeUrl(p.image_url);
+    if (custom) {
+      const wrap = h('div', { class: 'cv', 'aria-label': p.title }), img = h('img', { src: custom, alt: p.title, loading: 'lazy', referrerpolicy: 'no-referrer' });
+      img.addEventListener('error', () => wrap.replaceWith(cover({ ...p, image_url: null })));
+      wrap.append(img); return wrap;
+    }
+    const d = p.details || {}; let kind = 'digital', icon = 'fa-solid fa-bolt', label = 'Digital product', main = p.title || '', sub = '';
+    if (p.category === 'tiktok_username') { kind = 'tiktok'; icon = 'fa-brands fa-tiktok'; label = 'TikTok'; main = '@' + (d.handle || String(p.title).replace(/^@/, '')); }
+    else if (p.category === 'instagram_username') { kind = 'instagram'; icon = 'fa-brands fa-instagram'; label = 'Instagram'; main = '@' + (d.handle || String(p.title).replace(/^@/, '')); }
+    else if (p.category === 'gift_card') { kind = 'gift'; icon = 'fa-solid fa-gift'; label = (d.brand || 'Gift card') + ' gift card'; main = d.value || p.title; sub = d.region || ''; }
+    return h('div', { class: 'cv cv-' + kind, role: 'img', 'aria-label': p.title },
+      h('i', { class: icon + ' cv-ic', 'aria-hidden': 'true' }), h('span', { class: 'cv-l' }, label), h('span', { class: 'cv-m' }, main), sub ? h('span', { class: 'cv-s' }, sub) : null);
+  }
+
   const needClient = el => { if (window.sbReady) return true; if (el) say(el, 'Not connected: ' + (window.sbError || 'config.js did not load'), 'err'); return false; };
   const session = async () => { if (!window.sbReady) return null; const { data } = await window.sb.auth.getSession(); return data.session; };
   async function copy(text, btn) {
@@ -102,5 +119,5 @@
   const foot = () => h('footer', { class: 'foot', style: 'text-align:center;margin-top:40px' },
     h('p', {}, 'Contact: ', h('a', { href: 'mailto:xfosto9@gmail.com' }, 'xfosto9@gmail.com')), h('p', {}, '© 2026 Resemblance. All rights reserved.'));
   document.addEventListener('DOMContentLoaded', () => { mountNav(); const f = document.getElementById('foot'); if (f) f.replaceWith(foot()); });
-  window.Shop = { LABEL, fmt, h, safeUrl, esc, say, dt, productImage, needClient, session, copy, SITE, money, stars, slugify, clip, setMeta, jsonLd, mountNav, avatar, RESERVED, cleanUsername, validUsername };
+  window.Shop = { LABEL, fmt, h, safeUrl, esc, say, dt, productImage, cover, needClient, session, copy, SITE, money, stars, slugify, clip, setMeta, jsonLd, mountNav, avatar, RESERVED, cleanUsername, validUsername };
 })();

@@ -9,7 +9,8 @@
 <meta property="og:type" content="product">
 <link rel="icon" href="/pfp.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" onerror="document.documentElement.classList.add('noicons')">
 <link rel="stylesheet" href="/shop.css">
 </head>
 <body>
@@ -83,7 +84,7 @@
       h('h1', {}, p.title),
       h('p', { class: 'sub' }, LABEL[p.category] || ''),
       h('div', { class: 'panel' },
-        h('img', { src: Shop.productImage(p), alt: p.title, style: 'width:100%;border-radius:12px;aspect-ratio:16/10;object-fit:cover', referrerpolicy: 'no-referrer' }),
+        Shop.cover(p),
         p.description ? h('p', { style: 'margin-top:14px;line-height:1.5;overflow-wrap:anywhere;white-space:pre-line' }, p.description) : null,
         h('div', { class: 'kv' }, h('span', {}, 'Price'), h('b', {}, money(p.price, p.currency) + (minq > 1 || p.category === 'digital_product' ? ' each' : ''))),
         h('div', { class: 'kv' }, h('span', {}, 'Available'), h('b', {}, p.available + ' | ' + (p.sold || 0) + ' sold')),

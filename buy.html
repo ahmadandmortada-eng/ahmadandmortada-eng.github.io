@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#000000">
 <meta name="robots" content="noindex">
 <link rel="icon" href="/pfp.png">
-<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/shop.css">
 <title>Checkout | Resemblanced</title>
 </head>
@@ -71,6 +71,11 @@
       put(box, h('p', { class: 'msg err' }, order.status === 'rejected' ? 'This payment was rejected. Contact us if you think this is a mistake.' : 'This order is no longer active.'),
         h('p', { style: 'margin-top:14px' }, h('a', { class: 'btn small', href: '/browse' }, 'Back to the shop')));
     } else if (order.method === 'baridimob') baridi(box); else crypto(box);
+    if (order.status === 'pending') put(box, h('p', { style: 'margin-top:22px;text-align:center' }, h('button', { class: 'btn small danger', onclick: async () => {
+      if (!confirm('Cancel this order? Do not send any payment for it.')) return;
+      const r = await sb.rpc('cancel_order', { p_order: order.id });
+      if (r.error) return alert(r.error.message); location.assign('/account');
+    } }, 'Cancel order')));
     view().replaceChildren(box);
   }
 

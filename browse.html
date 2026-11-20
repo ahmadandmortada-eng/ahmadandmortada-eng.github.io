@@ -14,7 +14,8 @@
 <meta property="og:image" content="https://rassim.shop/pfp.png">
 <link rel="icon" href="/pfp.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" onerror="document.documentElement.classList.add('noicons')">
 <link rel="stylesheet" href="/shop.css">
 </head>
 <body>
@@ -44,7 +45,7 @@
     $('grid').replaceChildren(...list.map(p => {
       const link = '/product?p=' + encodeURIComponent(p.slug || p.id), out = p.available <= 0;
       return h('article', { class: 'card' + (out ? ' sold' : '') },
-        h('a', { class: 'cover', href: link, 'aria-label': p.title }, h('img', { src: Shop.productImage(p), alt: p.title, loading: 'lazy', referrerpolicy: 'no-referrer' })),
+        h('a', { class: 'cover', href: link, 'aria-label': p.title }, Shop.cover(p)),
         h('span', { class: 'tag' }, LABEL[p.category] || p.category),
         h('span', { class: 'name' }, h('a', { href: link }, p.title)),
         h('span', { class: 'meta' }, p.available + ' available | ' + (p.sold || 0) + ' sold' + (p.min_qty > 1 ? ' | min ' + p.min_qty : '')),

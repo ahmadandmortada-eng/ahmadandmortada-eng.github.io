@@ -1,27 +1,27 @@
 /* Public profile card: used by profile.html and by 404.html (so rassim.shop/<username> works) */
 (function () {
   const css = `.pcard{max-width:440px;width:100%;margin:auto;text-align:center;position:relative;z-index:1;overflow:hidden;border-radius:22px;
-    border:1px solid color-mix(in srgb,var(--accent) 28%,#222);background:rgba(0,0,0,.55);font-family:"Cormorant Garamond",Georgia,serif;color:var(--text)}
+    border:1px solid color-mix(in srgb,var(--accent) 28%,#222);background:rgba(0,0,0,.55);font-family:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;color:var(--text)}
   .pcard .pbanner{height:96px}
   .pcard .pbody{padding:0 22px 26px;margin-top:-54px}
   .pcard .av{display:inline-grid;place-items:center;border-radius:50%;border:3px solid var(--accent);color:var(--text);line-height:1;margin:0 auto;background:#0b0b0b}
-  .pcard h1{font-family:"Cormorant Garamond",Georgia,serif;font-style:normal;font-weight:600;letter-spacing:.01em;font-size:clamp(1.7rem,7vw,2.1rem);margin:14px 0 0;overflow-wrap:anywhere;text-shadow:none}
+  .pcard h1{font-family:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;font-style:normal;font-weight:600;letter-spacing:.01em;font-size:clamp(1.7rem,7vw,2.1rem);margin:14px 0 0;overflow-wrap:anywhere;text-shadow:none}
   .pcard .handle{color:var(--muted);font-size:1.2rem;font-style:normal;margin-top:2px;overflow-wrap:anywhere}
   .pcard .badges{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
-  .pcard .badge{font-size:.9rem;padding:3px 12px;border-radius:999px;border:1px solid color-mix(in srgb,var(--accent) 45%,#222);background:rgba(0,0,0,.45);font-style:italic}
+  .pcard .badge{font-size:.9rem;padding:3px 12px;border-radius:999px;border:1px solid color-mix(in srgb,var(--accent) 45%,#222);background:rgba(0,0,0,.45);font-style:normal}
   .pcard .bio{color:var(--muted);margin:14px 0 4px;line-height:1.55;font-size:1.15rem;overflow-wrap:anywhere;white-space:pre-line}
-  .pcard .info{color:var(--muted);font-style:italic;font-size:1rem;margin-top:8px}
+  .pcard .info{color:var(--muted);font-style:normal;font-size:1rem;margin-top:8px}
   .pcard .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:20px 0 6px;padding:14px 0;border-top:1px solid color-mix(in srgb,var(--accent) 15%,#222);border-bottom:1px solid color-mix(in srgb,var(--accent) 15%,#222)}
   .pcard .stats b{display:block;font-weight:600;font-size:1.45rem;color:var(--text)}
-  .pcard .stats span{color:var(--muted);font-style:italic;font-size:.95rem}
+  .pcard .stats span{color:var(--muted);font-style:normal;font-size:.95rem}
   .pcard h3{font-weight:600;font-size:1.25rem;margin:20px 0 6px;text-align:left}
   .pcard .rv{text-align:left;padding:12px 0;border-bottom:1px solid color-mix(in srgb,var(--accent) 12%,#222)}
   .pcard .rv:last-child{border-bottom:0}
   .pcard .rv .st{color:var(--accent);letter-spacing:.1em}
   .pcard .rv p{margin-top:4px;line-height:1.45;overflow-wrap:anywhere}
-  .pcard .rv small{color:var(--muted);font-style:italic}
+  .pcard .rv small{color:var(--muted);font-style:normal}
   .pcard .acts{margin-top:22px}
-  .pcard .pbtn{display:inline-block;margin:4px;padding:10px 22px;border-radius:999px;color:var(--text);text-decoration:none;font:inherit;font-style:italic;font-size:1.05rem;cursor:pointer;
+  .pcard .pbtn{display:inline-block;margin:4px;padding:10px 22px;border-radius:999px;color:var(--text);text-decoration:none;font:inherit;font-style:normal;font-size:1.05rem;cursor:pointer;
     border:1px solid color-mix(in srgb,var(--accent) 35%,#222);background:rgba(0,0,0,.55);transition:color .2s,border-color .2s,box-shadow .2s,transform .2s}
   .pcard .pbtn:hover{color:#fff;border-color:var(--accent);box-shadow:0 0 22px var(--glow);transform:translateY(-2px)}`;
 

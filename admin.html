@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#000000">
 <link rel="icon" href="/pfp.png">
-<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/shop.css">
 </head>
 <body>
@@ -32,6 +32,8 @@
   <section id="panel" hidden>
     <div class="top"><span id="who"></span><button class="btn small" data-logout>Logout</button></div>
 
+    <div class="chips tabs-bar" id="tabs"></div>
+    <div class="tab" id="t-add" hidden>
     <h2>Add product</h2>
     <div class="panel">
       <label for="cat">Type</label>
@@ -81,12 +83,19 @@
       <p class="msg" id="addMsg"></p>
     </div>
 
+    </div>
+    <div class="tab" id="t-products">
     <h2>Products</h2>
     <div class="panel" id="list"></div>
 
+    </div>
+    <div class="tab" id="t-orders" hidden>
     <h2>Orders</h2>
+    <label class="check" style="margin:0 0 12px"><input type="checkbox" id="showHidden"> Show hidden orders</label>
     <div class="panel" id="orders"></div>
 
+    </div>
+    <div class="tab" id="t-promo" hidden>
     <h2>Promo codes</h2>
     <div class="panel">
       <div class="row2">
@@ -98,6 +107,8 @@
       <div id="pcList"></div>
     </div>
 
+    </div>
+    <div class="tab" id="t-feedbacks" hidden>
     <h2>Feedbacks</h2>
     <div class="panel">
       <div class="row2">
@@ -112,6 +123,8 @@
       <div id="fbList"></div>
     </div>
 
+    </div>
+    <div class="tab" id="t-settings" hidden>
     <h2>Payment settings</h2>
     <div class="panel">
       <label for="s_rip">Baridi Mob / Edahabia RIP</label><input id="s_rip" type="text" inputmode="numeric" placeholder="00799999...">
@@ -125,6 +138,7 @@
     <div class="panel">
       <p class="note" style="margin:0 0 12px">Download an updated sitemap with all your product pages, upload it to GitHub (replace sitemap.xml), and submit it in Google Search Console.</p>
       <button class="btn" id="sitemapBtn">Download sitemap.xml</button>
+    </div>
     </div>
   </section>
 </main>
@@ -250,8 +264,11 @@
   /* ---------- orders ---------- */
   const STATUS = { pending: 'waiting', awaiting_review: 'review', paid: 'paid', rejected: 'rejected', expired: 'expired', cancelled: 'cancelled' };
   async function loadOrders() {
-    const { data, error } = await sb.from('orders').select('*').order('created_at', { ascending: false }).limit(50);
+    const { data: all, error } = await sb.from('orders').select('*').order('created_at', { ascending: false }).limit(200);
     const box = $('orders'); box.replaceChildren();
+    const review = (all || []).filter(o => o.status === 'awaiting_review' && !o.hidden_by_admin).length;
+    const tb = $('tabs') && $('tabs').querySelector('[data-t="orders"]'); if (tb) tb.textContent = 'Orders' + (review ? ' (' + review + ')' : '');
+    const data = (all || []).filter(o => $('showHidden').checked || !o.hidden_by_admin);
     if (error) return box.append(h('p', { class: 'msg err' }, error.message));
     if (!data.length) return box.append(h('p', { class: 'empty' }, 'No orders yet.'));
     const decide = async (o, status) => {
@@ -261,16 +278,32 @@
     data.forEach(o => {
       const open = ['pending', 'awaiting_review', 'expired'].includes(o.status), total = Shop.money(o.amount ?? o.amount_dzd, o.currency || 'DZD');
       box.append(h('div', { class: 'row' },
-        h('div', {}, h('div', { class: 't' }, o.product_title + (o.qty > 1 ? ' x ' + o.qty : ''), h('span', { class: 'pill' + (o.status === 'paid' ? ' ok' : o.status === 'rejected' ? ' bad' : '') }, STATUS[o.status] || o.status)),
+        h('div', {}, h('div', { class: 't' }, o.product_title + (o.qty > 1 ? ' x ' + o.qty : ''), h('span', { class: 'pill' + (o.status === 'paid' ? ' ok' : o.status === 'rejected' ? ' bad' : '') }, STATUS[o.status] || o.status), o.hidden_by_admin ? h('span', { class: 'pill' }, 'hidden') : ''),
           h('div', { class: 'c' }, [o.user_email, o.method === 'crypto' ? 'crypto ' + (o.crypto_currency || '-') + (o.provider_status ? ' (' + o.provider_status + ')' : '') : 'Baridi Mob', o.discount_pct ? 'promo ' + o.discount_code + ' -' + o.discount_pct + '%' : null, o.reference, Shop.dt(o.created_at)].filter(Boolean).join(' | ')),
           o.tx_ref ? h('div', { class: 'c' }, 'Transaction: ' + o.tx_ref) : null),
         h('div', { class: 't' }, total + (o.currency === 'USD' && o.method === 'baridimob' ? ' (' + fmt(o.amount_dzd) + ')' : '')),
         h('div', { class: 'acts' },
           o.proof_path ? h('button', { class: 'btn small', onclick: async () => { const r = await sb.storage.from('receipts').createSignedUrl(o.proof_path, 120); if (r.error) alert(r.error.message); else window.open(r.data.signedUrl, '_blank', 'noopener'); } }, 'View receipt') : null,
           open ? h('button', { class: 'btn small', onclick: () => decide(o, 'paid') }, o.method === 'crypto' ? 'Mark paid' : 'Approve') : null,
-          open && o.status !== 'expired' ? h('button', { class: 'btn small danger', onclick: () => decide(o, 'rejected') }, 'Reject') : null)));
+          open && o.status !== 'expired' ? h('button', { class: 'btn small danger', onclick: () => decide(o, 'rejected') }, 'Reject') : null,
+          h('button', { class: 'btn small', onclick: async () => { const r = await sb.rpc('admin_hide_order', { p_order: o.id, p_hidden: !o.hidden_by_admin }); if (r.error) alert(r.error.message); loadOrders(); } }, o.hidden_by_admin ? 'Unhide' : 'Hide'),
+          o.status === 'paid' ? null : h('button', { class: 'btn small danger', onclick: async () => {
+            if (!confirm('Delete this order permanently?')) return;
+            const r = await sb.rpc('admin_delete_order', { p_order: o.id }); if (r.error) alert(r.error.message); loadOrders(); loadProducts(); } }, 'Delete'))));
     });
   }
+
+  $('showHidden').addEventListener('change', loadOrders);
+
+  /* ---------- tabs ---------- */
+  const TABS = [['products', 'Products'], ['add', 'Add product'], ['orders', 'Orders'], ['promo', 'Promo codes'], ['feedbacks', 'Feedbacks'], ['settings', 'Settings']];
+  function tab(name) {
+    if (!TABS.some(t => t[0] === name)) name = 'products';
+    document.querySelectorAll('.tab').forEach(t => t.hidden = t.id !== 't-' + name);
+    [...$('tabs').children].forEach(b => b.classList.toggle('on', b.dataset.t === name));
+    history.replaceState(null, '', '#' + name);
+  }
+  $('tabs').replaceChildren(...TABS.map(([k, t]) => h('button', { class: 'chip', 'data-t': k, onclick: () => tab(k) }, t)));
 
   /* ---------- promo codes ---------- */
   async function loadPromos() {
@@ -357,7 +390,7 @@
     if (error) { fail('Error: ' + error.message); return show('denied'); }
     if (!data) { $('deniedWho').textContent = session.user.email + ' | id: ' + session.user.id; return show('denied'); }
     $('who').textContent = 'Signed in as ' + session.user.email;
-    show('panel'); renderFields(); sync();
+    show('panel'); renderFields(); sync(); tab(location.hash.slice(1) || 'products');
     await loadProducts(); loadOrders(); loadPromos(); loadFeedbacks(); loadSettings();
   }
   $('loginBtn').addEventListener('click', async () => {

@@ -44,7 +44,7 @@
 <link rel="apple-touch-icon" href="pfp.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Cormorant+Garamond:ital,wght@1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" onerror="document.documentElement.classList.add('noicons')">
 <style>
   :root {
@@ -60,7 +60,7 @@
   body {
     background: radial-gradient(ellipse at 50% 35%, var(--bg-center) 0%, var(--bg-edge) 70%);
     color: var(--text);
-    font-family: "Cormorant Garamond", Georgia, serif;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
     text-align:center; min-height:100dvh; overflow:hidden;
     transition: background 1.2s;
   }
@@ -77,7 +77,7 @@
   @keyframes pulse { 50% { box-shadow: 0 0 0 6px var(--bg-edge), 0 0 0 7px var(--accent), 0 0 75px var(--glow); } }
 
   h1 { font-family:"UnifrakturCook","Times New Roman",serif; font-size:clamp(2.1rem,9.5vw,2.8rem); overflow-wrap:anywhere; font-weight:700; letter-spacing:.02em; text-shadow:0 0 22px var(--glow); }
-  .bio { font-size:clamp(1.1rem,4.4vw,1.3rem); font-style:italic; color:var(--muted); margin:8px 0 30px; line-height:1.5; }
+  .bio { font-size:clamp(1rem,4vw,1.15rem); line-height:1.7; font-style:normal; color:var(--muted); margin:8px 0 30px; line-height:1.5; }
 
   .socials { display:flex; justify-content:center; flex-wrap:wrap; gap:16px; }
   .socials a {
@@ -120,12 +120,12 @@
   #pages::-webkit-scrollbar { display:none; }
   .page { flex:0 0 100%; min-width:100%; scroll-snap-align:start; scroll-snap-stop:always; display:flex; padding:max(24px,env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-right,0px)) calc(70px + env(safe-area-inset-bottom,0px)) max(24px,env(safe-area-inset-left,0px)); overflow-y:auto; overscroll-behavior:contain; }
   .page > main { margin:auto; max-width:min(420px,100%); }
-  .page .bio { font-size:clamp(1.05rem,4vw,1.25rem); }
+  .page .bio { font-size:clamp(1rem,3.8vw,1.1rem); }
   #p2 .bio, #p3 .bio { margin-bottom:0; }
-  .shopbtn { display:inline-block; margin-top:26px; min-width:130px; padding:14px 30px; border-radius:999px; color:var(--text); font-size:1.2rem; font-style:italic; text-decoration:none;
+  .shopbtn { display:inline-block; margin-top:26px; min-width:130px; padding:14px 30px; border-radius:999px; color:var(--text); font-size:1.2rem; font-style:normal; text-decoration:none;
     border:1px solid color-mix(in srgb, var(--accent) 35%, #222); background:rgba(0,0,0,.55); transition:color .2s, border-color .2s, box-shadow .2s, transform .2s; }
   .shopbtn:hover { color:#fff; border-color:var(--accent); box-shadow:0 0 22px var(--glow); transform:translateY(-3px); }
-  .dc { margin-top:18px; color:var(--muted); font-style:italic; font-size:1.05rem; letter-spacing:.04em; }
+  .dc { margin-top:18px; color:var(--muted); font-style:normal; font-size:1.05rem; letter-spacing:.04em; }
   .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
   .foot { margin-top:34px; padding-top:18px; border-top:1px solid color-mix(in srgb, var(--accent) 25%, #222); font-size:.95rem; color:var(--muted); line-height:1.8; }
   .foot a { color:var(--text); text-decoration:none; border-bottom:1px solid var(--glow); }
@@ -187,7 +187,7 @@
   .mpfp { width:84px; height:84px; border-radius:50%; object-fit:cover; background:#111; margin-bottom:16px;
           border:2px solid var(--accent); box-shadow:0 0 0 5px var(--bg-edge), 0 0 0 6px var(--accent), 0 0 34px var(--glow); }
   .mbrand { font-family:"UnifrakturCook","Times New Roman",serif; font-size:1.6rem; text-shadow:0 0 18px var(--glow); }
-  .mlabel { display:flex; align-items:center; gap:14px; margin:10px 0 clamp(18px,4vh,34px); font-style:italic; font-size:.95rem; letter-spacing:.45em; text-indent:.45em; color:var(--muted); text-transform:uppercase; }
+  .mlabel { display:flex; align-items:center; gap:14px; margin:10px 0 clamp(18px,4vh,34px); font-style:normal; font-size:.95rem; letter-spacing:.45em; text-indent:.45em; color:var(--muted); text-transform:uppercase; }
   .mlabel i { display:block; width:clamp(24px,8vw,44px); height:1px; background:linear-gradient(90deg, transparent, var(--accent)); }
   .mlabel i:last-child { transform:scaleX(-1); }
   .mfoot { margin-top:clamp(24px,5vh,44px); font-size:.95rem; color:var(--muted); letter-spacing:.08em; }
@@ -200,7 +200,7 @@
     transition:opacity .6s, transform .6s, color .25s, text-shadow .25s;
   }
   #menu nav a { display:block; text-align:center; text-decoration:none; }
-  #menu nav :is(button, a) small { display:block; font-family:"Cormorant Garamond",Georgia,serif; font-style:italic; font-size:.95rem; letter-spacing:.3em; text-indent:.3em; opacity:.7; }
+  #menu nav :is(button, a) small { display:block; font-family:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; font-style:normal; font-size:.95rem; letter-spacing:.3em; text-indent:.3em; opacity:.7; }
   .menu-open #menu nav :is(button, a) { opacity:1; transform:none; transition-delay:var(--d), var(--d), 0s, 0s; }   /* first the menu opens, then each item appears in turn */
   #menu nav :is(button, a):hover, #menu nav :is(button, a).on { color:var(--text); text-shadow:0 0 22px var(--glow); }
   #menu nav :is(button, a):focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
