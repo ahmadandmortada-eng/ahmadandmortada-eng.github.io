@@ -101,7 +101,7 @@
     <h2>Feedbacks</h2>
     <div class="panel">
       <div class="row2">
-        <div><label for="fb_author">Customer name</label><input id="fb_author" type="text" maxlength="60"></div>
+        <div><label for="fb_author">Username of the reviewer (shown publicly)</label><input id="fb_author" type="text" maxlength="60"></div>
         <div><label for="fb_rating">Rating</label>
           <select id="fb_rating"><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select></div>
       </div>
@@ -292,15 +292,36 @@
 
   /* ---------- feedbacks ---------- */
   async function loadFeedbacks() {
-    const { data, error } = await sb.from('feedbacks').select('*').order('created_at', { ascending: false }).limit(50);
+    const { data, error } = await sb.from('feedbacks').select('*').order('created_at', { ascending: false }).limit(100);
     const box = $('fbList'); box.replaceChildren();
     if (error) return box.append(h('p', { class: 'msg err' }, error.message));
-    (data || []).forEach(f => box.append(h('div', { class: 'row' },
-      h('div', {}, h('div', { class: 't' }, f.author, ' ', h('span', { class: 'stars' }, Shop.stars(f.rating)), f.is_visible ? '' : h('span', { class: 'pill' }, 'hidden')),
-        h('div', { class: 'c' }, [f.product_title, Shop.dt(f.created_at)].filter(Boolean).join(' | ')), h('div', { class: 'c' }, f.comment)),
-      h('div', { class: 'acts', style: 'grid-column:auto' },
-        h('button', { class: 'btn small', onclick: async () => { await sb.from('feedbacks').update({ is_visible: !f.is_visible }).eq('id', f.id); loadFeedbacks(); } }, f.is_visible ? 'Hide' : 'Show'),
-        h('button', { class: 'btn small danger', onclick: async () => { if (confirm('Delete this feedback?')) { await sb.from('feedbacks').delete().eq('id', f.id); loadFeedbacks(); } } }, 'Delete')))));
+    (data || []).forEach(f => {
+      const row = h('div', { class: 'row' });
+      const view = () => row.replaceChildren(
+        h('div', {}, h('div', { class: 't' }, f.author, ' ', h('span', { class: 'stars' }, Shop.stars(f.rating)), f.is_visible ? '' : h('span', { class: 'pill' }, 'hidden')),
+          h('div', { class: 'c' }, [f.product_title, Shop.dt(f.created_at)].filter(Boolean).join(' | ')), h('div', { class: 'c' }, f.comment)),
+        h('div', { class: 'acts', style: 'grid-column:auto' },
+          h('button', { class: 'btn small', onclick: edit }, 'Edit'),
+          h('button', { class: 'btn small', onclick: async () => { await sb.from('feedbacks').update({ is_visible: !f.is_visible }).eq('id', f.id); loadFeedbacks(); } }, f.is_visible ? 'Hide' : 'Show'),
+          h('button', { class: 'btn small danger', onclick: async () => { if (confirm('Delete this feedback?')) { await sb.from('feedbacks').delete().eq('id', f.id); loadFeedbacks(); } } }, 'Delete')));
+      const edit = () => {
+        const name = h('input', { type: 'text', maxlength: '60', value: f.author });
+        const rate = h('select', {}, [5, 4, 3, 2, 1].map(n => h('option', { value: String(n), ...(n === f.rating ? { selected: '' } : {}) }, n + (n === 1 ? ' star' : ' stars'))));
+        const prod = h('select', {}, h('option', { value: '' }, 'None'), ...PRODUCTS.map(p => h('option', { value: p.id }, p.title))); prod.value = f.product_id || '';
+        const text = h('textarea', { maxlength: '600' }, f.comment), msg = h('p', { class: 'msg' });
+        row.replaceChildren(h('div', { style: 'grid-column:1/-1' },
+          h('label', {}, 'Username (shown publicly)'), name, h('label', {}, 'Rating'), rate, h('label', {}, 'Product (optional)'), prod, h('label', {}, 'Feedback'), text,
+          h('div', { class: 'acts', style: 'margin-top:12px' },
+            h('button', { class: 'btn small', onclick: async () => {
+              const author = name.value.trim(), comment = text.value.trim();
+              if (!author || !comment) return say(msg, 'Enter the username and the feedback.', 'err');
+              const pr = PRODUCTS.find(p => p.id === prod.value);
+              const r = await sb.from('feedbacks').update({ author, comment, rating: parseInt(rate.value, 10), product_id: prod.value || null, product_title: pr ? pr.title : null }).eq('id', f.id);
+              if (r.error) return say(msg, r.error.message, 'err'); loadFeedbacks(); } }, 'Save'),
+            h('button', { class: 'btn small', onclick: view }, 'Cancel')), msg));
+      };
+      view(); box.append(row);
+    });
   }
   $('fbAdd').addEventListener('click', async () => {
     const author = $('fb_author').value.trim(), comment = $('fb_comment').value.trim(), pid = $('fb_product').value;
