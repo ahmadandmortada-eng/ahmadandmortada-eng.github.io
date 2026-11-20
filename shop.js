@@ -63,6 +63,12 @@
   }
   function jsonLd(obj) { const e = document.createElement('script'); e.type = 'application/ld+json'; e.textContent = JSON.stringify(obj); document.head.append(e); }
 
+
+  /* usernames: 3-20 letters/numbers/_ (must match setup7.sql) */
+  const RESERVED = ['admin','administrator','root','support','shop','browse','product','products','feedbacks','feedback','account','login','logout','signup','register','buy','profile','user','users','settings','api','help','about','contact','terms','privacy','rassim','resemblance','resemblanced','shopixx','index','null','undefined','www','mail','official','staff','moderator','orders','order','cart','checkout','home'];
+  const cleanUsername = t => String(t || '').trim().toLowerCase().replace(/^@/, '');
+  const validUsername = n => /^[a-z0-9_]{3,20}$/.test(n) && !RESERVED.includes(n);
+
   /* shared top bar: <nav id="nav"></nav> */
   function mountNav() {
     const n = document.getElementById('nav'); if (!n) return;
@@ -73,5 +79,5 @@
   const foot = () => h('footer', { class: 'foot', style: 'text-align:center;margin-top:40px' },
     h('p', {}, 'Contact: ', h('a', { href: 'mailto:xfosto9@gmail.com' }, 'xfosto9@gmail.com')), h('p', {}, '© 2026 Resemblance. All rights reserved.'));
   document.addEventListener('DOMContentLoaded', () => { mountNav(); const f = document.getElementById('foot'); if (f) f.replaceWith(foot()); });
-  window.Shop = { LABEL, fmt, h, safeUrl, esc, say, dt, productImage, needClient, session, copy, SITE, money, stars, slugify, clip, setMeta, jsonLd, mountNav };
+  window.Shop = { LABEL, fmt, h, safeUrl, esc, say, dt, productImage, needClient, session, copy, SITE, money, stars, slugify, clip, setMeta, jsonLd, mountNav, RESERVED, cleanUsername, validUsername };
 })();

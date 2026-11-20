@@ -16,6 +16,7 @@
   <h1>Account</h1>
   <p class="sub" id="who"></p>
   <p style="text-align:center;margin-bottom:6px"><button class="btn small" id="out" hidden>Logout</button></p>
+  <p class="sub" id="plink" style="margin-bottom:4px"></p>
   <h2>My orders</h2>
   <div class="panel" id="list"><p class="empty">Loading...</p></div>
   <div id="foot"></div>
@@ -33,6 +34,9 @@
     const s = await Shop.session();
     if (!s) return location.replace('/login.html?next=/account');
     $('who').textContent = s.user.email; $('out').hidden = false;
+    sb.from('profiles').select('username').eq('id', s.user.id).maybeSingle().then(({ data: pr }) => {
+      $('plink').replaceChildren(pr ? h('a', { href: '/profile' }, '@' + pr.username + ' (edit profile)') : h('a', { href: '/profile' }, 'Choose your username'));
+    });
     $('out').addEventListener('click', async () => { await sb.auth.signOut(); location.replace('/login.html'); });
     const { data, error } = await sb.from('orders').select('*').eq('user_id', s.user.id).order('created_at', { ascending: false });
     const box = $('list'); box.replaceChildren();

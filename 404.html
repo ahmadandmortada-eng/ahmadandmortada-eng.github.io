@@ -8,7 +8,15 @@
 <meta name="theme-color" content="#000000">
 <link rel="icon" href="/pfp.png">
 <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Cormorant+Garamond:ital,wght@1,500&display=swap" rel="stylesheet">
+<script>
+  /* a path like /ali might be a customer profile: keep the page hidden until we know */
+  if (/^\/@?[A-Za-z0-9_]{3,20}\/?$/.test(location.pathname)) {
+    document.documentElement.classList.add('probe');
+    setTimeout(() => document.documentElement.classList.remove('probe'), 4000);
+  }
+</script>
 <style>
+  html.probe main { visibility:hidden; }
   :root {
     --accent: hsl(0 0% 82%);
     --glow: hsl(0 0% 82% / .5);
@@ -138,6 +146,23 @@
       requestAnimationFrame(loop);
     })();
   }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="/config.js"></script>
+<script src="/shop.js"></script>
+<script src="/profile-view.js"></script>
+<script>
+  /* rassim.shop/<username> shows that customer's profile; rassim.shop/user opens your own profile */
+  (async () => {
+    try {
+      const seg = decodeURIComponent(location.pathname).replace(/^\/+|\/+$/g, '');
+      if (seg.toLowerCase() === 'user') return location.replace('/profile');
+      if (typeof Shop === 'undefined' || !window.sbReady) return;
+      const name = Shop.cleanUsername(seg);
+      if (Shop.validUsername(name)) await ProfileView.render(document.querySelector('main'), name);
+    } catch (e) { /* keep the normal 404 page */ }
+    finally { document.documentElement.classList.remove('probe'); }
+  })();
 </script>
 </body>
 </html>

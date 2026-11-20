@@ -4,5 +4,6 @@ Disallow: /admin
 Disallow: /account
 Disallow: /login
 Disallow: /buy
+Disallow: /profile
 
 Sitemap: https://rassim.shop/sitemap.xml

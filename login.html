@@ -16,6 +16,11 @@
   <h1 id="title">Login</h1>
   <p class="sub" id="sub">Welcome back</p>
   <div class="panel">
+    <div id="unBox" hidden>
+      <label for="uname">Username</label>
+      <input id="uname" type="text" maxlength="20" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <p class="note" style="margin-top:6px">3-20 letters, numbers or _ . Your page will be rassim.shop/yourname</p>
+    </div>
     <label for="email">Email</label>
     <input id="email" type="email" autocomplete="username">
     <label for="pass">Password</label>
@@ -40,15 +45,21 @@
     mode = m; $('title').textContent = m === 'in' ? 'Login' : 'Sign up'; $('sub').textContent = m === 'in' ? 'Welcome back' : 'Create your account';
     $('go').textContent = m === 'in' ? 'Login' : 'Create account';
     $('switch').textContent = m === 'in' ? 'New here? Create an account' : 'Already have an account? Login';
-    $('pass').autocomplete = m === 'in' ? 'current-password' : 'new-password'; say($('msg'), '');
+    $('pass').autocomplete = m === 'in' ? 'current-password' : 'new-password'; $('unBox').hidden = m === 'in'; say($('msg'), '');
   }
   $('switch').addEventListener('click', e => { e.preventDefault(); setMode(mode === 'in' ? 'up' : 'in'); });
   async function go() {
     if (!Shop.needClient($('msg'))) return;
     const email = $('email').value.trim(), password = $('pass').value;
     if (!email || password.length < 6) return say($('msg'), 'Enter your email and a password (6+ characters).', 'err');
+    const un = Shop.cleanUsername($('uname').value);
+    if (mode === 'up') {
+      if (!Shop.validUsername(un)) return say($('msg'), 'Choose a username: 3-20 letters, numbers or _ (some names are reserved).', 'err');
+      const { data: taken } = await sb.from('profiles_public').select('username').eq('username', un).maybeSingle();
+      if (taken) return say($('msg'), 'This username is already taken.', 'err');
+    }
     $('go').disabled = true; say($('msg'), '...');
-    const r = mode === 'in' ? await sb.auth.signInWithPassword({ email, password }) : await sb.auth.signUp({ email, password });
+    const r = mode === 'in' ? await sb.auth.signInWithPassword({ email, password }) : await sb.auth.signUp({ email, password, options: { data: { username: un } } });
     $('go').disabled = false;
     if (r.error) return say($('msg'), r.error.message, 'err');
     if (r.data.session) return location.replace(dest);

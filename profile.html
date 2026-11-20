@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="robots" content="noindex">
+<title>My profile | Resemblance</title>
+<link rel="icon" href="/pfp.png">
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shop.css">
+</head>
+<body>
+<main class="wrap narrow">
+  <nav id="nav"></nav>
+  <h1>My profile</h1>
+  <p class="sub" id="sub"></p>
+  <p id="state" class="empty">Loading...</p>
+  <div id="view" hidden>
+    <div class="panel">
+      <label for="uname">Username</label>
+      <input id="uname" type="text" maxlength="20" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <p class="note" style="margin-top:8px">3-20 letters, numbers or _ . Your public page: <span id="link"></span></p>
+      <label for="bio">Bio (optional, 200 characters)</label>
+      <textarea id="bio" maxlength="200"></textarea>
+      <p style="margin-top:16px" class="inline"><button class="btn" id="save">Save</button><a class="btn" id="open" href="#" target="_blank" rel="noopener" hidden>View my page</a></p>
+      <p class="msg" id="msg"></p>
+    </div>
+    <p style="text-align:center;margin-top:18px"><a class="btn small" href="/account">My orders</a> <button class="btn small" id="out">Logout</button></p>
+  </div>
+  <div id="foot"></div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="/config.js"></script>
+<script src="/theme.js"></script>
+<script src="/shop.js"></script>
+<script>if (typeof Shop === 'undefined') addEventListener('DOMContentLoaded', () => { const e = document.getElementById('state'); if (e) e.textContent = 'Error: shop.js did not load. Upload shop.js next to index.html on GitHub.'; });</script>
+<script>
+  const $ = id => document.getElementById(id), { say } = Shop;
+  let uid = null, has = false, current = '';
+  function showLink(name) {
+    $('link').textContent = name ? 'rassim.shop/' + name : '(choose a username first)';
+    $('open').hidden = !name; if (name) $('open').href = '/' + name;
+  }
+  $('uname').addEventListener('input', () => showLink(Shop.cleanUsername($('uname').value)));
+  $('save').addEventListener('click', async () => {
+    const n = Shop.cleanUsername($('uname').value), bio = $('bio').value.trim() || null;
+    if (!Shop.validUsername(n)) return say($('msg'), 'Use 3-20 letters, numbers or _ (some names are reserved).', 'err');
+    $('save').disabled = true; say($('msg'), '...');
+    const r = has ? await sb.from('profiles').update({ username: n, bio }).eq('id', uid) : await sb.from('profiles').insert({ id: uid, username: n, bio });
+    $('save').disabled = false;
+    if (r.error) return say($('msg'), /duplicate|unique/i.test(r.error.message) ? 'This username is already taken.' : r.error.message, 'err');
+    has = true; current = n; showLink(n); say($('msg'), 'Saved. Your page: rassim.shop/' + n, 'ok');
+  });
+  $('out').addEventListener('click', async () => { await sb.auth.signOut(); location.replace('/login.html'); });
+  (async () => {
+    if (!Shop.needClient($('state'))) return;
+    const s = await Shop.session();
+    if (!s) return location.replace('/login.html?next=/profile');
+    uid = s.user.id; $('sub').textContent = s.user.email;
+    const { data } = await sb.from('profiles').select('*').eq('id', uid).maybeSingle();
+    if (data) { has = true; current = data.username; $('uname').value = data.username; $('bio').value = data.bio || ''; }
+    showLink(current); $('state').hidden = true; $('view').hidden = false;
+  })().catch(e => { $('state').textContent = 'Error: ' + e.message; });
+</script>
+</body>
+</html>
