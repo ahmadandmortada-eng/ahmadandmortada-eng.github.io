@@ -13,28 +13,22 @@
 <body>
 <main class="wrap">
   <h1>Admin</h1>
-  <p class="sub">Products &amp; prices</p>
+  <p class="sub">Products, orders, promo codes &amp; feedbacks</p>
+  <p id="setup" class="msg err" hidden></p>
 
-  <p id="setup" class="msg err" hidden>Supabase is not connected yet. Fill in config.js first.</p>
-
-  <!-- login -->
   <section id="login" class="panel narrow" style="margin:0 auto" hidden>
-    <label for="email">Email</label>
-    <input id="email" type="email" autocomplete="username">
-    <label for="pass">Password</label>
-    <input id="pass" type="password" autocomplete="current-password">
+    <label for="email">Email</label><input id="email" type="email" autocomplete="username">
+    <label for="pass">Password</label><input id="pass" type="password" autocomplete="current-password">
     <p style="margin-top:18px"><button class="btn" id="loginBtn">Login</button></p>
     <p class="msg" id="loginMsg"></p>
   </section>
 
-  <!-- signed in but not an admin -->
   <section id="denied" class="panel narrow" style="margin:0 auto;text-align:center" hidden>
     <p>This account is not an admin.</p>
     <p class="msg" id="deniedWho" style="overflow-wrap:anywhere"></p>
     <p style="margin-top:16px"><button class="btn" data-logout>Logout</button></p>
   </section>
 
-  <!-- panel -->
   <section id="panel" hidden>
     <div class="top"><span id="who"></span><button class="btn small" data-logout>Logout</button></div>
 
@@ -47,11 +41,26 @@
         <option value="gift_card">Gift card</option>
         <option value="digital_product">Digital product</option>
       </select>
-
       <div id="fields"></div>
 
-      <label for="price">Price (DA)</label>
-      <input id="price" type="number" min="0" step="1" inputmode="numeric">
+      <label for="desc">Description (shown on the product page and in Google, optional)</label>
+      <textarea id="desc"></textarea>
+
+      <div class="row2">
+        <div><label for="currency">Currency</label>
+          <select id="currency"><option value="DZD">Dinar (DA)</option><option value="USD">Dollar ($)</option></select></div>
+        <div><label for="price" id="priceLabel">Price per unit (DA)</label>
+          <input id="price" type="number" min="0" step="1" inputmode="decimal"></div>
+      </div>
+
+      <label for="minq">Minimum order quantity (1 = no minimum)</label>
+      <input id="minq" type="number" min="1" step="1" value="1" inputmode="numeric">
+
+      <label>Allowed payment methods</label>
+      <div class="checks">
+        <label><input type="checkbox" id="m_baridimob" checked> Baridi Mob / Edahabia</label>
+        <label><input type="checkbox" id="m_crypto" checked> Crypto</label>
+      </div>
 
       <label for="dtype">Delivery</label>
       <select id="dtype">
@@ -59,16 +68,15 @@
         <option value="codes">A different code per buyer (one per line)</option>
       </select>
       <div id="stockBox"><label for="stock">Stock (how many can be sold)</label>
-      <input id="stock" type="number" min="0" step="1" value="1" inputmode="numeric"></div>
+        <input id="stock" type="number" min="0" step="1" value="1" inputmode="numeric"></div>
 
       <label for="img">Image link (optional, an automatic image is used if empty)</label>
       <input id="img" type="url" placeholder="https://...">
 
-      <label for="secret" id="secretLabel">Delivery content (hidden, sent to the buyer after payment)</label>
+      <label for="secret" id="secretLabel">Delivery content</label>
       <textarea id="secret" placeholder="Code, account details, login..."></textarea>
 
       <label class="check"><input type="checkbox" id="active" checked> Visible in the shop</label>
-
       <p style="margin-top:18px"><button class="btn" id="addBtn">Add product</button></p>
       <p class="msg" id="addMsg"></p>
     </div>
@@ -79,16 +87,44 @@
     <h2>Orders</h2>
     <div class="panel" id="orders"></div>
 
+    <h2>Promo codes</h2>
+    <div class="panel">
+      <div class="row2">
+        <div><label for="pc_code">Code</label><input id="pc_code" type="text" placeholder="RDX"></div>
+        <div><label for="pc_pct">Discount %</label><input id="pc_pct" type="number" min="1" max="100" value="20"></div>
+      </div>
+      <p style="margin-top:14px"><button class="btn small" id="pcAdd">Add code</button></p>
+      <p class="msg" id="pcMsg"></p>
+      <div id="pcList"></div>
+    </div>
+
+    <h2>Feedbacks</h2>
+    <div class="panel">
+      <div class="row2">
+        <div><label for="fb_author">Customer name</label><input id="fb_author" type="text" maxlength="60"></div>
+        <div><label for="fb_rating">Rating</label>
+          <select id="fb_rating"><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select></div>
+      </div>
+      <label for="fb_product">Product (optional)</label><select id="fb_product"><option value="">None</option></select>
+      <label for="fb_comment">Feedback</label><textarea id="fb_comment" maxlength="600"></textarea>
+      <p style="margin-top:14px"><button class="btn small" id="fbAdd">Add feedback</button></p>
+      <p class="msg" id="fbMsg"></p>
+      <div id="fbList"></div>
+    </div>
+
     <h2>Payment settings</h2>
     <div class="panel">
-      <label for="s_rip">Baridi Mob / Edahabia RIP</label>
-      <input id="s_rip" type="text" inputmode="numeric" placeholder="00799999...">
-      <label for="s_name">Account holder name</label>
-      <input id="s_name" type="text">
-      <label for="s_rate">Exchange rate: how many DA for 1 USD (used for crypto prices)</label>
-      <input id="s_rate" type="number" min="1" step="0.01">
+      <label for="s_rip">Baridi Mob / Edahabia RIP</label><input id="s_rip" type="text" inputmode="numeric" placeholder="00799999...">
+      <label for="s_name">Account holder name</label><input id="s_name" type="text">
+      <label for="s_rate">Exchange rate: how many DA for 1 USD</label><input id="s_rate" type="number" min="1" step="0.01">
       <p style="margin-top:18px"><button class="btn" id="saveSettings">Save settings</button></p>
       <p class="msg" id="settingsMsg"></p>
+    </div>
+
+    <h2>Tools</h2>
+    <div class="panel">
+      <p class="note" style="margin:0 0 12px">Download an updated sitemap with all your product pages, upload it to GitHub (replace sitemap.xml), and submit it in Google Search Console.</p>
+      <button class="btn" id="sitemapBtn">Download sitemap.xml</button>
     </div>
   </section>
 </main>
@@ -99,122 +135,119 @@
 <script src="/shop.js"></script>
 <script>
   const $ = id => document.getElementById(id);
-  const sb = window.sb;
-  const LABEL = { tiktok_username:'TikTok username', instagram_username:'Instagram username', gift_card:'Gift card', digital_product:'Digital product' };
-  const fmt = n => Number(n).toLocaleString('en-US') + ' DA';
-
-  /* tiny DOM helper (no innerHTML, so nothing typed can run as code) */
-  function h(tag, props = {}, ...kids) {
-    const e = document.createElement(tag);
-    for (const [k, v] of Object.entries(props)) {
-      if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v);
-    }
-    kids.flat().forEach(c => e.append(c instanceof Node ? c : document.createTextNode(c)));
-    return e;
-  }
-  const say = (el, text, kind) => { el.textContent = text; el.className = 'msg' + (kind ? ' ' + kind : ''); };
+  const { h, fmt, money, say, LABEL } = Shop, sb = window.sb;
+  const fail = text => { $('setup').textContent = text; $('setup').hidden = false; };
+  addEventListener('error', e => fail('Error: ' + e.message));
+  addEventListener('unhandledrejection', e => fail('Error: ' + (e.reason && e.reason.message || e.reason)));
   const show = name => ['login', 'denied', 'panel'].forEach(n => $(n).hidden = n !== name);
+  const lines = t => t.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+  let PRODUCTS = [];
 
-  /* ---------- templates per type ---------- */
+  /* ---------- add product: templates ---------- */
   const BRANDS = ['Steam', 'PlayStation', 'Xbox', 'Google Play', 'Apple / iTunes', 'Netflix', 'Amazon', 'Other'];
-  function field(id, label, type = 'text', ph = '') { return [h('label', { for: id }, label), h('input', { id, type, placeholder: ph })]; }
+  const field = (id, label, type = 'text', ph = '') => [h('label', { for: id }, label), h('input', { id, type, placeholder: ph })];
   function renderFields() {
     const c = $('cat').value, box = $('fields'); box.replaceChildren();
-    if (c === 'tiktok_username' || c === 'instagram_username') {
-      box.append(...field('f_handle', 'Username (without @)'), ...field('f_note', 'Note (optional)'));
-    } else if (c === 'gift_card') {
-      box.append(h('label', { for: 'f_brand' }, 'Brand'),
-        h('select', { id: 'f_brand' }, BRANDS.map(b => h('option', { value: b }, b))),
-        ...field('f_value', 'Value', 'text', 'e.g. $20'), ...field('f_region', 'Region', 'text', 'e.g. US, EU, Global'));
-    } else {
-      box.append(...field('f_title', 'Title'), h('label', { for: 'f_desc' }, 'Description'), h('textarea', { id: 'f_desc' }));
-    }
+    if (c === 'tiktok_username' || c === 'instagram_username') box.append(...field('f_handle', 'Username (without @)'));
+    else if (c === 'gift_card') box.append(h('label', { for: 'f_brand' }, 'Brand'), h('select', { id: 'f_brand' }, BRANDS.map(b => h('option', { value: b }, b))),
+      ...field('f_value', 'Value', 'text', 'e.g. $20'), ...field('f_region', 'Region', 'text', 'e.g. US, EU, Global'));
+    else box.append(...field('f_title', 'Title'));
   }
   $('cat').addEventListener('change', renderFields);
+  function sync() {
+    const codes = $('dtype').value === 'codes', usd = $('currency').value === 'USD';
+    $('stockBox').hidden = codes;
+    $('secretLabel').textContent = codes ? 'Codes: one per line. Each buyer gets one line, and stock = number of lines.' : 'Delivery content (hidden, sent to every buyer after payment)';
+    $('priceLabel').textContent = 'Price per unit (' + (usd ? '$' : 'DA') + ')';
+    $('price').step = usd ? '0.01' : '1';
+  }
+  $('dtype').addEventListener('change', sync); $('currency').addEventListener('change', sync);
 
   function readForm() {
     const c = $('cat').value, v = id => ($(id)?.value || '').trim();
-    let title, description = null, details = {};
+    let title, details = {}, auto = '';
     if (c === 'tiktok_username' || c === 'instagram_username') {
-      const handle = v('f_handle').replace(/^@+/, '');
-      if (!handle) throw new Error('Enter the username.');
-      title = '@' + handle; details = { handle, note: v('f_note') };
-      description = v('f_note') || null;
+      const handle = v('f_handle').replace(/^@+/, ''); if (!handle) throw new Error('Enter the username.');
+      title = '@' + handle; details = { handle }; auto = (c === 'tiktok_username' ? 'TikTok' : 'Instagram') + ' username @' + handle + '.';
     } else if (c === 'gift_card') {
-      const brand = v('f_brand'), value = v('f_value'), region = v('f_region');
-      if (!value) throw new Error('Enter the card value.');
-      title = `${brand} ${value}`; details = { brand, value, region };
-      description = region ? 'Region: ' + region : null;
-    } else {
-      title = v('f_title'); description = v('f_desc') || null;
-      if (!title) throw new Error('Enter a title.');
-    }
-    const price = parseInt($('price').value, 10);
-    if (!Number.isInteger(price) || price < 0) throw new Error('Enter a valid price.');
-    const dtype = $('dtype').value, stock = parseInt($('stock').value, 10);
-    const lines = $('secret').value.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+      const brand = v('f_brand'), value = v('f_value'), region = v('f_region'); if (!value) throw new Error('Enter the card value.');
+      title = brand + ' ' + value; details = { brand, value, region }; auto = brand + ' gift card ' + value + (region ? ', region ' + region : '') + '.';
+    } else { title = v('f_title'); if (!title) throw new Error('Enter a title.'); }
+    const cur = $('currency').value, price = parseFloat($('price').value);
+    if (!(price >= 0) || isNaN(price)) throw new Error('Enter a valid price.');
+    if (cur === 'DZD' && !Number.isInteger(price)) throw new Error('Dinar prices must be whole numbers.');
+    const minq = parseInt($('minq').value, 10); if (!Number.isInteger(minq) || minq < 1) throw new Error('Minimum quantity must be 1 or more.');
+    const methods = ['baridimob', 'crypto'].filter(m => $('m_' + m).checked); if (!methods.length) throw new Error('Choose at least one payment method.');
+    const dtype = $('dtype').value, stock = parseInt($('stock').value, 10), codes = lines($('secret').value);
     if (dtype === 'shared' && (!Number.isInteger(stock) || stock < 0)) throw new Error('Enter a valid stock number.');
-    if (dtype === 'codes' && !lines.length) throw new Error('Paste at least one code (one per line).');
+    if (dtype === 'codes' && !codes.length) throw new Error('Paste at least one code (one per line).');
+    if (dtype === 'codes' && codes.length < minq) throw new Error('You have fewer codes than the minimum order quantity.');
     details.delivery = dtype;
-    return { row: { category: c, title, description, price_dzd: price, image_url: v('img') || null, details, is_active: $('active').checked,
-                    stock: dtype === 'codes' ? 0 : stock, is_sold: dtype === 'codes' ? true : stock <= 0 }, secret: $('secret').value.trim(), dtype, lines };
+    return { row: { category: c, title, description: v('desc') || auto || null, price: cur === 'USD' ? Math.round(price * 100) / 100 : price, currency: cur, min_qty: minq,
+                    pay_methods: methods, image_url: v('img') || null, details, is_active: $('active').checked,
+                    stock: dtype === 'codes' ? 0 : stock, is_sold: dtype === 'codes' ? true : stock <= 0 }, secret: $('secret').value.trim(), dtype, codes, base: Shop.slugify(title) || 'item' };
   }
-
-  function syncDelivery() {
-    const codes = $('dtype').value === 'codes';
-    $('stockBox').hidden = codes;
-    $('secretLabel').textContent = codes ? 'Codes: one per line. Each buyer gets one line, and stock = number of lines.' : 'Delivery content (hidden, sent to every buyer after payment)';
-  }
-  $('dtype').addEventListener('change', syncDelivery); syncDelivery();
+  const rnd = () => Math.random().toString(36).slice(2, 6);
 
   $('addBtn').addEventListener('click', async () => {
     const msg = $('addMsg'); say(msg, '');
     let d; try { d = readForm(); } catch (e) { return say(msg, e.message, 'err'); }
     $('addBtn').disabled = true;
-    const { data: p, error } = await sb.from('products').insert(d.row).select().single();
-    if (error) { $('addBtn').disabled = false; return say(msg, 'Could not add: ' + error.message, 'err'); }
-    let err = null;
-    if (d.dtype === 'codes') err = (await sb.rpc('admin_add_codes', { p_product: p.id, p_codes: d.lines })).error;
+    let res;
+    for (let i = 0; i < 3; i++) {                       // the link (slug) must be unique: retry with a new suffix
+      res = await sb.from('products').insert({ ...d.row, slug: d.base + '-' + rnd() }).select().single();
+      if (!res.error || !/slug/.test(res.error.message)) break;
+    }
+    if (res.error) { $('addBtn').disabled = false; return say(msg, 'Could not add: ' + res.error.message, 'err'); }
+    const p = res.data; let err = null;
+    if (d.dtype === 'codes') err = (await sb.rpc('admin_add_codes', { p_product: p.id, p_codes: d.codes })).error;
     else if (d.secret) err = (await sb.from('product_secrets').insert({ product_id: p.id, content: d.secret })).error;
-    say(msg, err ? 'Product added, but the delivery content failed: ' + err.message : 'Product added.', err ? 'err' : 'ok');
+    say(msg, err ? 'Product added, but the delivery content failed: ' + err.message : 'Product added: /product?p=' + p.slug, err ? 'err' : 'ok');
     $('addBtn').disabled = false;
-    ['price', 'img', 'secret'].forEach(i => $(i).value = ''); $('stock').value = '1'; renderFields();
+    ['price', 'img', 'secret', 'desc'].forEach(i => $(i).value = ''); $('stock').value = '1'; $('minq').value = '1'; renderFields();
     loadProducts();
   });
 
-  /* ---------- list / edit ---------- */
+  /* ---------- products ---------- */
   async function loadProducts() {
     const { data, error } = await sb.from('products').select('*').order('created_at', { ascending: false });
     const box = $('list'); box.replaceChildren();
     if (error) return box.append(h('p', { class: 'msg err' }, error.message));
+    PRODUCTS = data;
+    $('fb_product').replaceChildren(h('option', { value: '' }, 'None'), ...data.map(p => h('option', { value: p.id }, p.title)));
     if (!data.length) return box.append(h('p', { class: 'empty' }, 'No products yet.'));
     data.forEach(p => {
       const codes = (p.details || {}).delivery === 'codes';
-      const price = h('input', { type: 'number', min: '0', step: '1', value: p.price_dzd, 'aria-label': 'Price' });
-      const act = async (patch) => { const r = await sb.from('products').update(patch).eq('id', p.id); if (r.error) alert(r.error.message); loadProducts(); };
+      const act = async patch => { const r = await sb.from('products').update(patch).eq('id', p.id); if (r.error) alert(r.error.message); loadProducts(); };
+      const price = h('input', { type: 'number', min: '0', step: p.currency === 'USD' ? '0.01' : '1', value: p.price, 'aria-label': 'Price' });
+      const minq = h('input', { type: 'number', min: '1', step: '1', value: p.min_qty, 'aria-label': 'Minimum quantity', title: 'Minimum quantity', style: 'width:90px' });
       let stockEls;
       if (codes) {
         const ta = h('textarea', { placeholder: 'More codes, one per line', style: 'min-height:60px' });
-        stockEls = [ta, h('button', { class: 'btn small', onclick: async () => {
-          const lines = ta.value.split(/\r?\n/).map(x => x.trim()).filter(Boolean); if (!lines.length) return;
-          const r = await sb.rpc('admin_add_codes', { p_product: p.id, p_codes: lines }); if (r.error) alert(r.error.message); loadProducts(); } }, 'Add codes')];
+        stockEls = [ta, h('button', { class: 'btn small', onclick: async () => { const l = lines(ta.value); if (!l.length) return;
+          const r = await sb.rpc('admin_add_codes', { p_product: p.id, p_codes: l }); if (r.error) alert(r.error.message); loadProducts(); } }, 'Add codes')];
       } else {
         const st = h('input', { type: 'number', min: '0', step: '1', value: p.stock, 'aria-label': 'Stock' });
         stockEls = [st, h('button', { class: 'btn small', onclick: () => { const n = parseInt(st.value, 10); if (Number.isInteger(n) && n >= 0) act({ stock: n, is_sold: n <= 0 }); else alert('Invalid stock'); } }, 'Save stock')];
       }
+      const methodBox = ['baridimob', 'crypto'].map(m => h('label', {}, h('input', { type: 'checkbox', ...((p.pay_methods || []).includes(m) ? { checked: '' } : {}),
+        onchange: e => { const cur = new Set(p.pay_methods || []); e.target.checked ? cur.add(m) : cur.delete(m); if (!cur.size) { e.target.checked = true; return alert('Keep at least one payment method.'); } act({ pay_methods: [...cur] }); } }), m === 'baridimob' ? 'Baridi Mob' : 'Crypto'));
       box.append(h('div', { class: 'row' },
         h('div', {}, h('div', { class: 't' }, p.title, p.stock <= 0 ? h('span', { class: 'pill' }, 'sold out') : '', p.is_active ? '' : h('span', { class: 'pill' }, 'hidden')),
-          h('div', { class: 'c' }, (LABEL[p.category] || p.category) + ' | stock: ' + p.stock + (codes ? ' (codes)' : ''))),
-        h('div', { class: 't' }, fmt(p.price_dzd)),
+          h('div', { class: 'c' }, [LABEL[p.category] || p.category, 'stock ' + p.stock + (codes ? ' (codes)' : ''), 'min ' + p.min_qty].join(' | '))),
+        h('div', { class: 't' }, money(p.price, p.currency)),
         h('div', { class: 'acts' }, price,
-          h('button', { class: 'btn small', onclick: () => { const n = parseInt(price.value, 10); if (Number.isInteger(n) && n >= 0) act({ price_dzd: n }); else alert('Invalid price'); } }, 'Save price'),
-          ...stockEls,
+          h('button', { class: 'btn small', onclick: () => { const n = parseFloat(price.value); if (n >= 0 && (p.currency === 'USD' || Number.isInteger(n))) act({ price: n }); else alert('Invalid price'); } }, 'Save price'),
+          ...stockEls, minq,
+          h('button', { class: 'btn small', onclick: () => { const n = parseInt(minq.value, 10); if (Number.isInteger(n) && n >= 1) act({ min_qty: n }); else alert('Invalid quantity'); } }, 'Save min'),
+          h('div', { class: 'checks', style: 'width:100%' }, methodBox),
+          h('a', { class: 'btn small', href: '/product?p=' + encodeURIComponent(p.slug || p.id), target: '_blank', rel: 'noopener' }, 'Open page'),
           h('button', { class: 'btn small', onclick: () => act({ is_active: !p.is_active }) }, p.is_active ? 'Hide' : 'Show'),
           h('button', { class: 'btn small danger', onclick: async () => { if (confirm('Delete "' + p.title + '"?')) { const r = await sb.from('products').delete().eq('id', p.id); if (r.error) alert(r.error.message); loadProducts(); } } }, 'Delete'))));
     });
   }
 
-  /* ---------- orders + settings ---------- */
+  /* ---------- orders ---------- */
   const STATUS = { pending: 'waiting', awaiting_review: 'review', paid: 'paid', rejected: 'rejected', expired: 'expired', cancelled: 'cancelled' };
   async function loadOrders() {
     const { data, error } = await sb.from('orders').select('*').order('created_at', { ascending: false }).limit(50);
@@ -226,18 +259,59 @@
       const r = await sb.rpc('admin_set_order', { p_order: o.id, p_status: status }); if (r.error) alert(r.error.message); loadOrders(); loadProducts();
     };
     data.forEach(o => {
-      const open = ['pending', 'awaiting_review', 'expired'].includes(o.status);
+      const open = ['pending', 'awaiting_review', 'expired'].includes(o.status), total = Shop.money(o.amount ?? o.amount_dzd, o.currency || 'DZD');
       box.append(h('div', { class: 'row' },
-        h('div', {}, h('div', { class: 't' }, o.product_title, h('span', { class: 'pill' + (o.status === 'paid' ? ' ok' : o.status === 'rejected' ? ' bad' : '') }, STATUS[o.status] || o.status)),
-          h('div', { class: 'c' }, [o.user_email, o.method === 'crypto' ? 'crypto ' + (o.crypto_currency || '-') + (o.provider_status ? ' (' + o.provider_status + ')' : '') : 'Baridi Mob', o.reference, Shop.dt(o.created_at)].filter(Boolean).join(' | ')),
+        h('div', {}, h('div', { class: 't' }, o.product_title + (o.qty > 1 ? ' x ' + o.qty : ''), h('span', { class: 'pill' + (o.status === 'paid' ? ' ok' : o.status === 'rejected' ? ' bad' : '') }, STATUS[o.status] || o.status)),
+          h('div', { class: 'c' }, [o.user_email, o.method === 'crypto' ? 'crypto ' + (o.crypto_currency || '-') + (o.provider_status ? ' (' + o.provider_status + ')' : '') : 'Baridi Mob', o.discount_pct ? 'promo ' + o.discount_code + ' -' + o.discount_pct + '%' : null, o.reference, Shop.dt(o.created_at)].filter(Boolean).join(' | ')),
           o.tx_ref ? h('div', { class: 'c' }, 'Transaction: ' + o.tx_ref) : null),
-        h('div', { class: 't' }, fmt(o.amount_dzd)),
+        h('div', { class: 't' }, total + (o.currency === 'USD' && o.method === 'baridimob' ? ' (' + fmt(o.amount_dzd) + ')' : '')),
         h('div', { class: 'acts' },
           o.proof_path ? h('button', { class: 'btn small', onclick: async () => { const r = await sb.storage.from('receipts').createSignedUrl(o.proof_path, 120); if (r.error) alert(r.error.message); else window.open(r.data.signedUrl, '_blank', 'noopener'); } }, 'View receipt') : null,
           open ? h('button', { class: 'btn small', onclick: () => decide(o, 'paid') }, o.method === 'crypto' ? 'Mark paid' : 'Approve') : null,
           open && o.status !== 'expired' ? h('button', { class: 'btn small danger', onclick: () => decide(o, 'rejected') }, 'Reject') : null)));
     });
   }
+
+  /* ---------- promo codes ---------- */
+  async function loadPromos() {
+    const { data, error } = await sb.from('promo_codes').select('*').order('created_at', { ascending: false });
+    const box = $('pcList'); box.replaceChildren();
+    if (error) return box.append(h('p', { class: 'msg err' }, error.message));
+    (data || []).forEach(c => box.append(h('div', { class: 'row' },
+      h('div', { class: 't' }, c.code, h('span', { class: 'pill' }, '-' + c.percent + '%'), c.is_active ? '' : h('span', { class: 'pill' }, 'off')),
+      h('div', { class: 'acts', style: 'grid-column:auto' },
+        h('button', { class: 'btn small', onclick: async () => { await sb.from('promo_codes').update({ is_active: !c.is_active }).eq('code', c.code); loadPromos(); } }, c.is_active ? 'Disable' : 'Enable'),
+        h('button', { class: 'btn small danger', onclick: async () => { if (confirm('Delete ' + c.code + '?')) { await sb.from('promo_codes').delete().eq('code', c.code); loadPromos(); } } }, 'Delete')))));
+  }
+  $('pcAdd').addEventListener('click', async () => {
+    const code = $('pc_code').value.trim().toUpperCase(), pct = parseInt($('pc_pct').value, 10);
+    if (!/^[A-Z0-9_-]{2,30}$/.test(code) || !(pct >= 1 && pct <= 100)) return say($('pcMsg'), 'Use letters/numbers for the code and 1-100 for the discount.', 'err');
+    const r = await sb.from('promo_codes').upsert({ code, percent: pct, is_active: true });
+    say($('pcMsg'), r.error ? r.error.message : 'Saved.', r.error ? 'err' : 'ok'); if (!r.error) { $('pc_code').value = ''; loadPromos(); }
+  });
+
+  /* ---------- feedbacks ---------- */
+  async function loadFeedbacks() {
+    const { data, error } = await sb.from('feedbacks').select('*').order('created_at', { ascending: false }).limit(50);
+    const box = $('fbList'); box.replaceChildren();
+    if (error) return box.append(h('p', { class: 'msg err' }, error.message));
+    (data || []).forEach(f => box.append(h('div', { class: 'row' },
+      h('div', {}, h('div', { class: 't' }, f.author, ' ', h('span', { class: 'stars' }, Shop.stars(f.rating)), f.is_visible ? '' : h('span', { class: 'pill' }, 'hidden')),
+        h('div', { class: 'c' }, [f.product_title, Shop.dt(f.created_at)].filter(Boolean).join(' | ')), h('div', { class: 'c' }, f.comment)),
+      h('div', { class: 'acts', style: 'grid-column:auto' },
+        h('button', { class: 'btn small', onclick: async () => { await sb.from('feedbacks').update({ is_visible: !f.is_visible }).eq('id', f.id); loadFeedbacks(); } }, f.is_visible ? 'Hide' : 'Show'),
+        h('button', { class: 'btn small danger', onclick: async () => { if (confirm('Delete this feedback?')) { await sb.from('feedbacks').delete().eq('id', f.id); loadFeedbacks(); } } }, 'Delete')))));
+  }
+  $('fbAdd').addEventListener('click', async () => {
+    const author = $('fb_author').value.trim(), comment = $('fb_comment').value.trim(), pid = $('fb_product').value;
+    if (!author || !comment) return say($('fbMsg'), 'Enter the customer name and the feedback.', 'err');
+    const prod = PRODUCTS.find(p => p.id === pid);
+    const r = await sb.from('feedbacks').insert({ author, comment, rating: parseInt($('fb_rating').value, 10), product_id: pid || null, product_title: prod ? prod.title : null });
+    say($('fbMsg'), r.error ? r.error.message : 'Feedback added.', r.error ? 'err' : 'ok');
+    if (!r.error) { $('fb_author').value = ''; $('fb_comment').value = ''; loadFeedbacks(); }
+  });
+
+  /* ---------- settings + sitemap ---------- */
   async function loadSettings() {
     const { data } = await sb.from('settings').select('*'); const s = {}; (data || []).forEach(r => s[r.key] = r.value);
     $('s_rip').value = s.rip || ''; $('s_name').value = s.rip_name || ''; $('s_rate').value = s.dzd_per_usd || '';
@@ -248,6 +322,12 @@
     const r = await sb.from('settings').upsert([{ key: 'rip', value: $('s_rip').value.trim() }, { key: 'rip_name', value: $('s_name').value.trim() }, { key: 'dzd_per_usd', value: String(rate) }]);
     say($('settingsMsg'), r.error ? r.error.message : 'Saved.', r.error ? 'err' : 'ok');
   });
+  $('sitemapBtn').addEventListener('click', () => {
+    const S = Shop.SITE, urls = [['/', '1.0'], ['/browse', '0.9'], ['/feedbacks', '0.7'], ...PRODUCTS.filter(p => p.is_active && p.slug).map(p => ['/product?p=' + encodeURIComponent(p.slug), '0.8'])];
+    const xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+      urls.map(([u, pr]) => '  <url><loc>' + (S + u).replace(/&/g, '&amp;') + '</loc><priority>' + pr + '</priority></url>').join('\n') + '\n</urlset>\n';
+    const a = h('a', { href: URL.createObjectURL(new Blob([xml], { type: 'application/xml' })), download: 'sitemap.xml' }); document.body.append(a); a.click(); a.remove();
+  });
 
   /* ---------- auth ---------- */
   async function route(session) {
@@ -256,7 +336,8 @@
     if (error) { fail('Error: ' + error.message); return show('denied'); }
     if (!data) { $('deniedWho').textContent = session.user.email + ' | id: ' + session.user.id; return show('denied'); }
     $('who').textContent = 'Signed in as ' + session.user.email;
-    show('panel'); renderFields(); loadProducts(); loadOrders(); loadSettings();
+    show('panel'); renderFields(); sync();
+    await loadProducts(); loadOrders(); loadPromos(); loadFeedbacks(); loadSettings();
   }
   $('loginBtn').addEventListener('click', async () => {
     say($('loginMsg'), '');
@@ -265,10 +346,6 @@
   });
   $('pass').addEventListener('keydown', e => { if (e.key === 'Enter') $('loginBtn').click(); });
   document.querySelectorAll('[data-logout]').forEach(b => b.addEventListener('click', () => sb.auth.signOut()));
-
-  const fail = text => { $('setup').textContent = text; $('setup').hidden = false; };
-  addEventListener('error', e => fail('Error: ' + e.message));
-  addEventListener('unhandledrejection', e => fail('Error: ' + (e.reason && e.reason.message || e.reason)));
 
   if (!window.sbReady) fail('Supabase is not connected: ' + (window.sbError || 'config.js did not load (is it next to index.html?)'));
   else {

@@ -4,52 +4,63 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
+<title>Shop: Gift Cards, TikTok &amp; Instagram Usernames, Digital Products | Resemblance</title>
+<meta name="description" content="Browse the Resemblance shop: gift cards, TikTok and Instagram usernames and digital products. Pay with Baridi Mob, Edahabia or crypto (BTC, USDT, ETH, LTC, SOL, BNB).">
+<meta name="keywords" content="Resemblance shop, Rassim shop, gift cards Algeria, Steam gift card Algeria, PlayStation gift card, TikTok username, Instagram username, digital products, Baridi Mob, Edahabia, pay with USDT">
+<link rel="canonical" href="https://rassim.shop/browse">
+<meta property="og:title" content="Resemblance Shop">
+<meta property="og:description" content="Gift cards, TikTok and Instagram usernames and digital products. Pay with Baridi Mob, Edahabia or crypto.">
+<meta property="og:url" content="https://rassim.shop/browse">
+<meta property="og:image" content="https://rassim.shop/pfp.png">
 <link rel="icon" href="/pfp.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/shop.css">
-<title>Browse | Resemblanced</title>
-<meta name="description" content="Browse the Resemblance shop: usernames, gift cards and digital products.">
 </head>
 <body>
 <main class="wrap">
-  <div class="top"><a class="btn small" href="/">Return</a><a class="btn small" href="/account">Account</a></div>
+  <nav id="nav"></nav>
   <h1>Browse</h1>
-  <p class="sub">Usernames, gift cards &amp; digital products</p>
+  <p class="sub">Gift cards, usernames &amp; digital products</p>
   <div class="chips" id="chips"></div>
+  <input class="search" id="q" type="search" placeholder="Search..." aria-label="Search products">
   <p id="state" class="empty">Loading...</p>
   <div class="grid" id="grid"></div>
+  <div id="foot"></div>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="/config.js"></script>
 <script src="/theme.js"></script>
 <script src="/shop.js"></script>
-<script>if (typeof Shop === 'undefined') addEventListener('DOMContentLoaded', () => { const e = document.getElementById('state') || document.getElementById('list') || document.getElementById('msg'); if (e) e.textContent = 'Error: shop.js did not load. Upload shop.js next to index.html on GitHub.'; });</script>
+<script>if (typeof Shop === 'undefined') addEventListener('DOMContentLoaded', () => { const e = document.getElementById('state'); if (e) e.textContent = 'Error: shop.js did not load. Upload shop.js next to index.html on GitHub.'; });</script>
 <script>
-  const $ = id => document.getElementById(id), { h, fmt, LABEL } = Shop;
+  const $ = id => document.getElementById(id), { h, money, LABEL } = Shop;
   const CHIPS = [['all', 'All'], ['tiktok_username', 'TikTok'], ['instagram_username', 'Instagram'], ['gift_card', 'Gift cards'], ['digital_product', 'Digital']];
-  let products = [], filter = 'all';
+  let products = [], filter = 'all', term = '';
 
   function render() {
-    const list = products.filter(p => filter === 'all' || p.category === filter);
+    const list = products.filter(p => (filter === 'all' || p.category === filter) && (!term || (p.title + ' ' + (p.description || '')).toLowerCase().includes(term)));
     $('chips').replaceChildren(...CHIPS.map(([k, t]) => h('button', { class: 'chip' + (k === filter ? ' on' : ''), onclick: () => { filter = k; render(); } }, t)));
-    $('grid').replaceChildren(...list.map(p => h('article', { class: 'card' + (p.available <= 0 ? ' sold' : '') },
-      h('img', { src: Shop.productImage(p), alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }),
-      h('span', { class: 'tag' }, LABEL[p.category] || p.category),
-      h('span', { class: 'name' }, p.title),
-      p.description ? h('span', { class: 'meta' }, p.description) : null,
-      h('span', { class: 'price' }, fmt(p.price_dzd)),
-      h('span', { class: 'meta' }, p.available + ' available | ' + (p.sold || 0) + ' sold'),
-      p.available <= 0 ? h('button', { class: 'btn', disabled: '' }, 'Sold out') : h('a', { class: 'btn', href: '/buy.html?p=' + encodeURIComponent(p.id), style: 'text-align:center' }, 'Buy'))));
+    $('grid').replaceChildren(...list.map(p => {
+      const link = '/product?p=' + encodeURIComponent(p.slug || p.id), out = p.available <= 0;
+      return h('article', { class: 'card' + (out ? ' sold' : '') },
+        h('a', { class: 'cover', href: link, 'aria-label': p.title }, h('img', { src: Shop.productImage(p), alt: p.title, loading: 'lazy', referrerpolicy: 'no-referrer' })),
+        h('span', { class: 'tag' }, LABEL[p.category] || p.category),
+        h('span', { class: 'name' }, h('a', { href: link }, p.title)),
+        h('span', { class: 'meta' }, p.available + ' available | ' + (p.sold || 0) + ' sold' + (p.min_qty > 1 ? ' | min ' + p.min_qty : '')),
+        h('span', { class: 'price' }, money(p.price, p.currency)),
+        out ? h('button', { class: 'btn', disabled: '' }, 'Sold out') : h('a', { class: 'btn', href: link, style: 'text-align:center' }, 'Buy'));
+    }));
     $('state').hidden = list.length > 0;
     if (!list.length) $('state').textContent = 'Nothing here yet.';
   }
-  async function load() {
-    if (!window.sbReady) { $('state').textContent = 'The shop is not connected: ' + (window.sbError || 'config.js did not load'); return; }
+  $('q').addEventListener('input', e => { term = e.target.value.trim().toLowerCase(); render(); });
+  (async () => {
+    if (!Shop.needClient($('state'))) return;
     const { data, error } = await sb.from('products_public').select('*').order('created_at', { ascending: false });
     if (error) { $('state').textContent = 'Could not load products: ' + error.message; return; }
     products = data; render();
-  }
-  load().catch(e => { $('state').hidden = false; $('state').textContent = 'Error: ' + e.message; });
+  })().catch(e => { $('state').hidden = false; $('state').textContent = 'Error: ' + e.message; });
 </script>
 </body>
 </html>

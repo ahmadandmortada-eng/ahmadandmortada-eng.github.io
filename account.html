@@ -12,11 +12,13 @@
 </head>
 <body>
 <main class="wrap narrow">
-  <div class="top"><a class="btn small" href="/browse">Browse</a><button class="btn small" id="out" hidden>Logout</button></div>
+  <nav id="nav"></nav>
   <h1>Account</h1>
   <p class="sub" id="who"></p>
+  <p style="text-align:center;margin-bottom:6px"><button class="btn small" id="out" hidden>Logout</button></p>
   <h2>My orders</h2>
   <div class="panel" id="list"><p class="empty">Loading...</p></div>
+  <div id="foot"></div>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="/config.js"></script>
@@ -37,10 +39,10 @@
     if (error) return box.append(h('p', { class: 'msg err' }, error.message));
     if (!data.length) return box.append(h('p', { class: 'empty' }, 'No orders yet.'));
     data.forEach(o => box.append(h('div', { class: 'row' },
-      h('div', {}, h('div', { class: 't' }, o.product_title, h('span', { class: 'pill' + (o.status === 'paid' ? ' ok' : o.status === 'rejected' ? ' bad' : '') }, TXT[o.status] || o.status)),
+      h('div', {}, h('div', { class: 't' }, o.product_title + (o.qty > 1 ? ' x ' + o.qty : ''), h('span', { class: 'pill' + (o.status === 'paid' ? ' ok' : o.status === 'rejected' ? ' bad' : '') }, TXT[o.status] || o.status)),
         h('div', { class: 'c' }, o.reference + ' | ' + Shop.dt(o.created_at))),
-      h('div', { class: 't' }, fmt(o.amount_dzd)),
-      h('div', { class: 'acts' }, h('a', { class: 'btn small', href: '/buy.html?o=' + encodeURIComponent(o.id) }, o.status === 'paid' ? 'View delivery' : o.status === 'pending' || o.status === 'awaiting_review' ? 'Continue' : 'Details'),
+      h('div', { class: 't' }, Shop.money(o.amount ?? o.amount_dzd, o.currency || 'DZD')),
+      h('div', { class: 'acts' }, h('a', { class: 'btn small', href: '/buy?o=' + encodeURIComponent(o.id) }, o.status === 'paid' ? 'View delivery' : o.status === 'pending' || o.status === 'awaiting_review' ? 'Continue' : 'Details'),
         ['paid', 'awaiting_review'].includes(o.status) ? null : h('button', { class: 'btn small danger', onclick: async () => {
           if (!confirm('Delete this order (' + o.reference + ')?')) return;
           const r = await sb.rpc('delete_order', { p_order: o.id });

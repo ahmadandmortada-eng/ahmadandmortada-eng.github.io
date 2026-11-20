@@ -12,7 +12,7 @@
 </head>
 <body>
 <main class="wrap narrow">
-  <div class="top"><a class="btn small" href="/browse">Browse</a></div>
+  <nav id="nav"></nav>
   <h1 id="title">Login</h1>
   <p class="sub" id="sub">Welcome back</p>
   <div class="panel">
@@ -24,11 +24,13 @@
     <p class="msg" id="msg"></p>
     <p class="note"><a href="#" id="switch">New here? Create an account</a></p>
   </div>
+  <div id="foot"></div>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="/config.js"></script>
 <script src="/theme.js"></script>
 <script src="/shop.js"></script>
+<script>if (typeof Shop === 'undefined') addEventListener('DOMContentLoaded', () => { const e = document.getElementById('state') || document.getElementById('list') || document.getElementById('msg'); if (e) e.textContent = 'Error: shop.js did not load. Upload shop.js next to index.html on GitHub.'; });</script>
 <script>
   const $ = id => document.getElementById(id), { say } = Shop;
   let mode = 'in';

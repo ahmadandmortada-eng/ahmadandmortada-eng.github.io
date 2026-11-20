@@ -38,5 +38,40 @@
     try { await navigator.clipboard.writeText(text); } catch (e) { const t = h('textarea', {}, text); document.body.append(t); t.select(); try { document.execCommand('copy'); } catch (_) {} t.remove(); }
     if (btn) { const o = btn.textContent; btn.textContent = 'Copied'; setTimeout(() => btn.textContent = o, 1400); }
   }
-  window.Shop = { LABEL, fmt, h, safeUrl, esc, say, dt, productImage, needClient, session, copy };
+
+  /* ---------- launch helpers ---------- */
+  const SITE = 'https://rassim.shop';
+  const money = (n, c) => c === 'USD'
+    ? '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : Number(n).toLocaleString('en-US') + ' DA';
+  const stars = n => '★'.repeat(n) + '☆'.repeat(5 - n);
+  const slugify = t => String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50);
+  const clip = (t, n) => { t = String(t || '').replace(/\s+/g, ' ').trim(); return t.length > n ? t.slice(0, n - 1).trim() + '…' : t; };
+
+  /* page title, description, canonical and social tags (set per page, per product) */
+  function setMeta({ title, desc, path, image }) {
+    document.title = title;
+    const meta = (sel, attrs) => { let e = document.head.querySelector(sel); if (!e) { e = document.createElement(sel.startsWith('link') ? 'link' : 'meta'); document.head.append(e); } for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); };
+    const url = SITE + (path || location.pathname);
+    meta('meta[name="description"]', { name: 'description', content: desc });
+    meta('link[rel="canonical"]', { rel: 'canonical', href: url });
+    meta('meta[property="og:title"]', { property: 'og:title', content: title });
+    meta('meta[property="og:description"]', { property: 'og:description', content: desc });
+    meta('meta[property="og:url"]', { property: 'og:url', content: url });
+    meta('meta[property="og:image"]', { property: 'og:image', content: image || SITE + '/pfp.png' });
+    meta('meta[name="twitter:card"]', { name: 'twitter:card', content: 'summary' });
+  }
+  function jsonLd(obj) { const e = document.createElement('script'); e.type = 'application/ld+json'; e.textContent = JSON.stringify(obj); document.head.append(e); }
+
+  /* shared top bar: <nav id="nav"></nav> */
+  function mountNav() {
+    const n = document.getElementById('nav'); if (!n) return;
+    n.className = 'top'; n.setAttribute('aria-label', 'Site');
+    n.replaceChildren(h('a', { class: 'btn small', href: '/' }, 'Home'),
+      h('span', { class: 'nav' }, h('a', { class: 'btn small', href: '/browse' }, 'Browse'), h('a', { class: 'btn small', href: '/feedbacks' }, 'Feedbacks'), h('a', { class: 'btn small', href: '/account' }, 'Account')));
+  }
+  const foot = () => h('footer', { class: 'foot', style: 'text-align:center;margin-top:40px' },
+    h('p', {}, 'Contact: ', h('a', { href: 'mailto:xfosto9@gmail.com' }, 'xfosto9@gmail.com')), h('p', {}, '© 2026 Resemblance. All rights reserved.'));
+  document.addEventListener('DOMContentLoaded', () => { mountNav(); const f = document.getElementById('foot'); if (f) f.replaceWith(foot()); });
+  window.Shop = { LABEL, fmt, h, safeUrl, esc, say, dt, productImage, needClient, session, copy, SITE, money, stars, slugify, clip, setMeta, jsonLd, mountNav };
 })();

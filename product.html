@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Product | Resemblance</title>
+<meta name="description" content="Buy digital products, gift cards and usernames at Resemblance.">
+<meta property="og:type" content="product">
+<link rel="icon" href="/pfp.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shop.css">
+</head>
+<body>
+<main class="wrap narrow">
+  <nav id="nav"></nav>
+  <p id="state" class="empty">Loading...</p>
+  <div id="view"></div>
+  <div id="foot"></div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="/config.js"></script>
+<script src="/theme.js"></script>
+<script src="/shop.js"></script>
+<script>if (typeof Shop === 'undefined') addEventListener('DOMContentLoaded', () => { const e = document.getElementById('state'); if (e) e.textContent = 'Error: shop.js did not load. Upload shop.js next to index.html on GitHub.'; });</script>
+<script>
+  const $ = id => document.getElementById(id), { h, money, say, LABEL } = Shop;
+  const MLAB = { baridimob: ['Baridi Mob / Edahabia card', 'Transfer to our RIP, then upload your receipt'], crypto: ['Crypto', 'BTC, LTC, ETH, SOL, USDT, BNB (confirmed automatically)'] };
+  let p = null, pct = 0, promo = '', method = null;
+  const fail = t => { $('state').hidden = false; $('state').textContent = t; $('state').className = 'msg err'; };
+
+  const totalFor = q => { const cur = Math.round(Number(p.price) * q * (100 - pct)) / 100; return p.currency === 'DZD' ? Math.ceil(cur) : Math.round(cur * 100) / 100; };
+
+  async function reviews(box) {
+    const { data } = await sb.from('feedbacks').select('*').eq('product_id', p.id).eq('is_visible', true).order('created_at', { ascending: false }).limit(10);
+    if (!data || !data.length) return;
+    const avg = data.reduce((a, r) => a + r.rating, 0) / data.length;
+    box.append(h('h2', { style: 'font-size:1.5rem' }, 'Feedbacks'),
+      h('p', { class: 'meta' }, h('span', { class: 'stars' }, Shop.stars(Math.round(avg))), ' ' + avg.toFixed(1) + ' (' + data.length + ')'),
+      h('div', { class: 'panel' }, data.map(r => h('div', { class: 'rev' }, h('div', { class: 'who' }, h('b', {}, r.author), h('span', { class: 'stars' }, Shop.stars(r.rating))), h('p', {}, r.comment)))));
+  }
+
+  function build() {
+    const minq = p.min_qty, max = Math.max(p.available, 0);
+    const qty = h('input', { id: 'qty', type: 'number', min: String(minq), max: String(max), step: '1', value: String(Math.min(minq, max)), inputmode: 'numeric' });
+    const code = h('input', { id: 'promo', type: 'text', placeholder: 'Promo code', autocomplete: 'off' });
+    const pmsg = h('p', { class: 'msg' }), msg = h('p', { class: 'msg' });
+    const totalEl = h('div', { class: 'total' }), calc = h('p', { class: 'note', style: 'text-align:right;margin:0' });
+    const methods = p.pay_methods || ['baridimob', 'crypto'];
+    method = methods[0];
+    const btns = methods.map(k => h('button', { class: 'opt' + (k === method ? ' on' : ''), type: 'button', onclick: () => { method = k; btns.forEach((b, i) => b.classList.toggle('on', methods[i] === k)); } }, MLAB[k][0], h('small', {}, MLAB[k][1])));
+    const go = h('button', { class: 'btn' }, 'Continue');
+
+    const draw = () => {
+      const q = parseInt(qty.value, 10), ok = Number.isInteger(q) && q >= minq && q <= max;
+      totalEl.textContent = ok ? 'Total: ' + money(totalFor(q), p.currency) : 'Total: -';
+      calc.textContent = ok ? q + ' x ' + money(p.price, p.currency) + (pct ? '  |  promo -' + pct + '%' : '') : (Number.isInteger(q) && q > max ? 'Only ' + max + ' available.' : 'Minimum order is ' + minq + (minq > 1 ? ' units.' : ' unit.'));
+      go.disabled = !ok;
+    };
+    qty.addEventListener('input', draw);
+    $('state').hidden = true;
+
+    const apply = async () => {
+      promo = code.value.trim(); pct = 0;
+      if (!promo) { say(pmsg, ''); return draw(); }
+      const { data, error } = await sb.rpc('check_promo', { p_code: promo });
+      if (error || !data) { promo = ''; say(pmsg, 'Invalid promo code.', 'err'); } else { pct = data; say(pmsg, 'Promo applied: -' + pct + '%', 'ok'); }
+      draw();
+    };
+    go.addEventListener('click', async () => {
+      const s = await Shop.session();
+      if (!s) return location.assign('/login.html?next=' + encodeURIComponent(location.pathname + location.search));
+      const q = parseInt(qty.value, 10); go.disabled = true; say(msg, '...');
+      const { data, error } = await sb.rpc('create_order', { p_product: p.id, p_method: method, p_qty: q, p_promo: promo || null });
+      if (error) { go.disabled = false; return say(msg, error.message, 'err'); }
+      location.assign('/buy?o=' + encodeURIComponent(data.id));
+    });
+
+    const soldOut = max <= 0;
+    const view = $('view');
+    view.replaceChildren(
+      h('h1', {}, p.title),
+      h('p', { class: 'sub' }, LABEL[p.category] || ''),
+      h('div', { class: 'panel' },
+        h('img', { src: Shop.productImage(p), alt: p.title, style: 'width:100%;border-radius:12px;aspect-ratio:16/10;object-fit:cover', referrerpolicy: 'no-referrer' }),
+        p.description ? h('p', { style: 'margin-top:14px;line-height:1.5;overflow-wrap:anywhere;white-space:pre-line' }, p.description) : null,
+        h('div', { class: 'kv' }, h('span', {}, 'Price'), h('b', {}, money(p.price, p.currency) + (minq > 1 || p.category === 'digital_product' ? ' each' : ''))),
+        h('div', { class: 'kv' }, h('span', {}, 'Available'), h('b', {}, p.available + ' | ' + (p.sold || 0) + ' sold')),
+        minq > 1 ? h('div', { class: 'kv' }, h('span', {}, 'Minimum order'), h('b', {}, minq + ' units')) : null,
+        soldOut ? h('p', { class: 'msg err', style: 'margin-top:14px' }, 'Sold out for now.') : [
+          h('label', { for: 'qty' }, 'Quantity'), qty,
+          h('label', { for: 'promo' }, 'Promo code (optional)'), h('div', { class: 'inline' }, code, h('button', { class: 'btn small', type: 'button', onclick: apply }, 'Apply')), pmsg,
+          h('label', {}, 'Payment method'), h('div', { class: 'opts' }, btns),
+          totalEl, calc, h('p', { style: 'margin-top:14px' }, go), msg]));
+    draw();
+    reviews(view);
+  }
+
+  function seo() {
+    const desc = Shop.clip(p.description || ('Buy ' + p.title + ' (' + (LABEL[p.category] || 'digital product') + ') at Resemblance. Pay with Baridi Mob, Edahabia or crypto. Secure checkout and fast delivery.'), 158);
+    const img = p.image_url && Shop.safeUrl(p.image_url);
+    Shop.setMeta({ title: p.title + ' | Resemblance', desc, path: '/product?p=' + encodeURIComponent(p.slug || p.id), image: img || undefined });
+    Shop.jsonLd({ '@context': 'https://schema.org', '@type': 'Product', name: p.title, description: desc, category: LABEL[p.category],
+      image: img || Shop.SITE + '/pfp.png', brand: { '@type': 'Brand', name: 'Resemblance' },
+      offers: { '@type': 'Offer', price: Number(p.price), priceCurrency: p.currency === 'USD' ? 'USD' : 'DZD', url: Shop.SITE + '/product?p=' + encodeURIComponent(p.slug || p.id),
+                availability: p.available > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock' } });
+  }
+
+  async function main() {
+    if (!Shop.needClient($('state'))) return;
+    const key = new URLSearchParams(location.search).get('p');
+    if (!key) return location.replace('/browse');
+    let { data } = await sb.from('products_public').select('*').eq('slug', key).maybeSingle();
+    if (!data && /^[0-9a-f-]{32,36}$/i.test(key)) data = (await sb.from('products_public').select('*').eq('id', key).maybeSingle()).data;
+    if (!data) return fail('Product not found.');
+    p = data; seo(); build();
+  }
+  main().catch(e => fail('Error: ' + e.message));
+</script>
+</body>
+</html>
