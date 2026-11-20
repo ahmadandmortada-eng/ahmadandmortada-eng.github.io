@@ -137,3 +137,10 @@ input[type=file] { padding:10px; }
 .tabs-bar { margin:4px 0 8px; }
 .row .acts .danger { margin-left:auto; }
 .top > .nav:last-child { margin-left:auto; }
+
+.cv-discord { background:radial-gradient(circle at 85% 0%, rgba(88,101,242,.45), transparent 55%), radial-gradient(circle at 10% 110%, rgba(88,101,242,.22), transparent 50%), radial-gradient(ellipse at 50% 20%, #222 0%, #070707 80%); }
+.cv-discord .cv-ic { color:#8c97ff; text-shadow:0 0 24px rgba(88,101,242,.8); }
+.cv-snapchat { background:radial-gradient(circle at 85% 0%, rgba(255,252,0,.20), transparent 55%), radial-gradient(circle at 10% 110%, rgba(255,252,0,.10), transparent 50%), radial-gradient(ellipse at 50% 20%, #222 0%, #070707 80%); }
+.cv-snapchat .cv-ic { color:#fffc00; text-shadow:0 0 24px rgba(255,252,0,.55); }
+.cv-tellonym { background:radial-gradient(circle at 85% 0%, rgba(255,64,96,.35), transparent 55%), radial-gradient(circle at 10% 110%, rgba(255,64,96,.16), transparent 50%), radial-gradient(ellipse at 50% 20%, #222 0%, #070707 80%); }
+.cv-tellonym .cv-ic { color:#ff4d6d; text-shadow:0 0 24px rgba(255,64,96,.6); }

@@ -1,6 +1,11 @@
 /* Shared helpers for the shop pages */
 (function () {
-  const LABEL = { tiktok_username: 'TikTok username', instagram_username: 'Instagram username', gift_card: 'Gift card', digital_product: 'Digital product' };
+  const LABEL = { tiktok_username: 'TikTok username', instagram_username: 'Instagram username', discord_username: 'Discord username', snapchat_username: 'Snapchat username',
+                  tellonym_username: 'Tellonym username', gift_card: 'Gift card', digital_product: 'Digital product' };
+  /* username products: [style, icon, platform name] */
+  const PLAT = { tiktok_username: ['tiktok', 'fa-brands fa-tiktok', 'TikTok'], instagram_username: ['instagram', 'fa-brands fa-instagram', 'Instagram'],
+                 discord_username: ['discord', 'fa-brands fa-discord', 'Discord'], snapchat_username: ['snapchat', 'fa-brands fa-snapchat', 'Snapchat'],
+                 tellonym_username: ['tellonym', 'fa-solid fa-comments', 'Tellonym'] };
   const fmt = n => Number(n).toLocaleString('en-US') + ' DA';
   function h(tag, props = {}, ...kids) {
     const e = document.createElement(tag);
@@ -17,8 +22,7 @@
   function productImage(p) {
     const custom = p.image_url && safeUrl(p.image_url); if (custom) return custom;
     const d = p.details || {}; let small = LABEL[p.category] || '', big = p.title || '';
-    if (p.category === 'tiktok_username') { small = 'TikTok'; big = '@' + (d.handle || big.replace(/^@/, '')); }
-    else if (p.category === 'instagram_username') { small = 'Instagram'; big = '@' + (d.handle || big.replace(/^@/, '')); }
+    if (PLAT[p.category]) { small = PLAT[p.category][2]; big = '@' + (d.handle || big.replace(/^@/, '')); }
     else if (p.category === 'gift_card') { small = (d.brand || 'Gift card') + ' gift card'; big = d.value || big; }
     else { small = 'Digital product'; }
     if (big.length > 22) big = big.slice(0, 21) + '…';
@@ -42,8 +46,7 @@
       wrap.append(img); return wrap;
     }
     const d = p.details || {}; let kind = 'digital', icon = 'fa-solid fa-bolt', label = 'Digital product', main = p.title || '', sub = '';
-    if (p.category === 'tiktok_username') { kind = 'tiktok'; icon = 'fa-brands fa-tiktok'; label = 'TikTok'; main = '@' + (d.handle || String(p.title).replace(/^@/, '')); }
-    else if (p.category === 'instagram_username') { kind = 'instagram'; icon = 'fa-brands fa-instagram'; label = 'Instagram'; main = '@' + (d.handle || String(p.title).replace(/^@/, '')); }
+    if (PLAT[p.category]) { [kind, icon, label] = PLAT[p.category]; main = '@' + (d.handle || String(p.title).replace(/^@/, '')); }
     else if (p.category === 'gift_card') { kind = 'gift'; icon = 'fa-solid fa-gift'; label = (d.brand || 'Gift card') + ' gift card'; main = d.value || p.title; sub = d.region || ''; }
     return h('div', { class: 'cv cv-' + kind, role: 'img', 'aria-label': p.title },
       h('i', { class: icon + ' cv-ic', 'aria-hidden': 'true' }), h('span', { class: 'cv-l' }, label), h('span', { class: 'cv-m' }, main), sub ? h('span', { class: 'cv-s' }, sub) : null);
@@ -119,5 +122,5 @@
   const foot = () => h('footer', { class: 'foot', style: 'text-align:center;margin-top:40px' },
     h('p', {}, 'Contact: ', h('a', { href: 'mailto:xfosto9@gmail.com' }, 'xfosto9@gmail.com')), h('p', {}, '© 2026 Resemblance. All rights reserved.'));
   document.addEventListener('DOMContentLoaded', () => { mountNav(); const f = document.getElementById('foot'); if (f) f.replaceWith(foot()); });
-  window.Shop = { LABEL, fmt, h, safeUrl, esc, say, dt, productImage, cover, needClient, session, copy, SITE, money, stars, slugify, clip, setMeta, jsonLd, mountNav, avatar, RESERVED, cleanUsername, validUsername };
+  window.Shop = { PLAT, LABEL, fmt, h, safeUrl, esc, say, dt, productImage, cover, needClient, session, copy, SITE, money, stars, slugify, clip, setMeta, jsonLd, mountNav, avatar, RESERVED, cleanUsername, validUsername };
 })();
