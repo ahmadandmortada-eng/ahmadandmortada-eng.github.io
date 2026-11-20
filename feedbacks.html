@@ -30,14 +30,14 @@
   const $ = id => document.getElementById(id), { h } = Shop;
   (async () => {
     if (!Shop.needClient($('state'))) return;
-    const { data, error } = await sb.from('feedbacks').select('*').eq('is_visible', true).order('created_at', { ascending: false }).limit(200);
+    const { data, error } = await sb.from('feedbacks_public').select('*').order('created_at', { ascending: false }).limit(200);
     if (error) { $('state').textContent = 'Could not load feedbacks: ' + error.message; return; }
     if (!data.length) { $('state').textContent = 'No feedbacks yet.'; return; }
     const avg = data.reduce((a, r) => a + r.rating, 0) / data.length;
     $('sub').replaceChildren(h('span', { class: 'stars' }, Shop.stars(Math.round(avg))), ' ' + avg.toFixed(1) + ' / 5 from ' + data.length + ' feedback' + (data.length > 1 ? 's' : ''));
     $('state').hidden = true; $('list').hidden = false;
     $('list').replaceChildren(...data.map(r => h('div', { class: 'rev' },
-      h('div', { class: 'who' }, h('b', {}, r.author), h('span', { class: 'stars' }, Shop.stars(r.rating))),
+      h('div', { class: 'who' }, h('b', {}, r.author, r.verified ? h('span', { class: 'vpill' }, 'Verified purchase') : null), h('span', { class: 'stars' }, Shop.stars(r.rating))),
       h('p', {}, r.comment),
       h('p', { class: 'c', style: 'color:var(--muted);font-style:italic;font-size:.95rem' }, [r.product_title, Shop.dt(r.created_at)].filter(Boolean).join(' | ')))));
   })().catch(e => { $('state').textContent = 'Error: ' + e.message; });

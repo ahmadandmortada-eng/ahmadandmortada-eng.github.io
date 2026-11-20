@@ -69,15 +69,38 @@
   const cleanUsername = t => String(t || '').trim().toLowerCase().replace(/^@/, '');
   const validUsername = n => /^[a-z0-9_]{3,20}$/.test(n) && !RESERVED.includes(n);
 
-  /* shared top bar: <nav id="nav"></nav> */
+  /* round avatar: emoji or first letter, ring in the chosen color */
+  function avatar(p, size) {
+    const hue = p && Number.isFinite(Number(p.avatar_hue)) && p.avatar_hue !== null ? Number(p.avatar_hue) : null;
+    const color = hue !== null ? `hsl(${hue} 70% 58%)` : 'var(--accent)';
+    const label = p && p.avatar_emoji ? p.avatar_emoji : (p && p.username ? p.username.charAt(0).toUpperCase() : '?');
+    return h('span', { class: 'av', 'aria-hidden': 'true', style: `width:${size}px;height:${size}px;font-size:${Math.round(size * .5)}px;border-color:${color};box-shadow:0 0 ${Math.round(size / 3)}px ${color}` }, label);
+  }
+  const CART = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3.5h3l2.3 11.2a1.5 1.5 0 0 0 1.5 1.2h8.4a1.5 1.5 0 0 0 1.5-1.1l1.6-6.6H6.4"/></svg>';
+
+  /* shared top bar: <nav id="nav"></nav>  (profile circle = your profile, cart = your orders) */
   function mountNav() {
     const n = document.getElementById('nav'); if (!n) return;
     n.className = 'top'; n.setAttribute('aria-label', 'Site');
-    n.replaceChildren(h('a', { class: 'btn small', href: '/' }, 'Home'),
-      h('span', { class: 'nav' }, h('a', { class: 'btn small', href: '/browse' }, 'Browse'), h('a', { class: 'btn small', href: '/feedbacks' }, 'Feedbacks'), h('a', { class: 'btn small', href: '/account' }, 'Account')));
+    const cart = h('a', { class: 'iconbtn', href: '/account', 'aria-label': 'My orders', title: 'My orders' });
+    cart.innerHTML = CART;
+    const badge = h('span', { class: 'cnt', hidden: '' }); cart.append(badge);
+    const prof = h('a', { class: 'iconbtn prof', href: '/login.html?next=' + encodeURIComponent(location.pathname + location.search), 'aria-label': 'Login', title: 'Login' }, h('span', { class: 'lg' }, 'Login'));
+    n.replaceChildren(h('span', { class: 'nav' }, h('a', { class: 'btn small', href: '/' }, 'Home'), h('a', { class: 'btn small', href: '/browse' }, 'Browse'), h('a', { class: 'btn small', href: '/feedbacks' }, 'Feedbacks')),
+      h('span', { class: 'nav' }, cart, prof));
+    if (!window.sbReady) return;
+    session().then(async s => {
+      if (!s) return;
+      prof.href = '/profile'; prof.title = 'My profile'; prof.setAttribute('aria-label', 'My profile');
+      const [{ data: p }, { count }] = await Promise.all([
+        window.sb.from('profiles').select('username,avatar_emoji,avatar_hue').eq('id', s.user.id).maybeSingle(),
+        window.sb.from('orders').select('id', { count: 'exact', head: true }).eq('user_id', s.user.id).in('status', ['pending', 'awaiting_review'])]);
+      prof.replaceChildren(avatar(p || { username: (s.user.email || '?') }, 38));
+      if (count > 0) { badge.textContent = String(count); badge.hidden = false; }
+    }).catch(() => {});
   }
   const foot = () => h('footer', { class: 'foot', style: 'text-align:center;margin-top:40px' },
     h('p', {}, 'Contact: ', h('a', { href: 'mailto:xfosto9@gmail.com' }, 'xfosto9@gmail.com')), h('p', {}, '© 2026 Resemblance. All rights reserved.'));
   document.addEventListener('DOMContentLoaded', () => { mountNav(); const f = document.getElementById('foot'); if (f) f.replaceWith(foot()); });
-  window.Shop = { LABEL, fmt, h, safeUrl, esc, say, dt, productImage, needClient, session, copy, SITE, money, stars, slugify, clip, setMeta, jsonLd, mountNav, RESERVED, cleanUsername, validUsername };
+  window.Shop = { LABEL, fmt, h, safeUrl, esc, say, dt, productImage, needClient, session, copy, SITE, money, stars, slugify, clip, setMeta, jsonLd, mountNav, avatar, RESERVED, cleanUsername, validUsername };
 })();

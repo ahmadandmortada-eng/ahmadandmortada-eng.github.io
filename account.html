@@ -46,7 +46,7 @@
       h('div', {}, h('div', { class: 't' }, o.product_title + (o.qty > 1 ? ' x ' + o.qty : ''), h('span', { class: 'pill' + (o.status === 'paid' ? ' ok' : o.status === 'rejected' ? ' bad' : '') }, TXT[o.status] || o.status)),
         h('div', { class: 'c' }, o.reference + ' | ' + Shop.dt(o.created_at))),
       h('div', { class: 't' }, Shop.money(o.amount ?? o.amount_dzd, o.currency || 'DZD')),
-      h('div', { class: 'acts' }, h('a', { class: 'btn small', href: '/buy?o=' + encodeURIComponent(o.id) }, o.status === 'paid' ? 'View delivery' : o.status === 'pending' || o.status === 'awaiting_review' ? 'Continue' : 'Details'),
+      h('div', { class: 'acts' }, h('a', { class: 'btn small', href: '/buy?o=' + encodeURIComponent(o.id) }, o.status === 'paid' ? 'View delivery & rate' : o.status === 'pending' || o.status === 'awaiting_review' ? 'Continue' : 'Details'),
         ['paid', 'awaiting_review'].includes(o.status) ? null : h('button', { class: 'btn small danger', onclick: async () => {
           if (!confirm('Delete this order (' + o.reference + ')?')) return;
           const r = await sb.rpc('delete_order', { p_order: o.id });

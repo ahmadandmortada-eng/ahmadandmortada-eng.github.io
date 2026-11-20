@@ -298,11 +298,11 @@
     (data || []).forEach(f => {
       const row = h('div', { class: 'row' });
       const view = () => row.replaceChildren(
-        h('div', {}, h('div', { class: 't' }, f.author, ' ', h('span', { class: 'stars' }, Shop.stars(f.rating)), f.is_visible ? '' : h('span', { class: 'pill' }, 'hidden')),
+        h('div', {}, h('div', { class: 't' }, f.author, ' ', h('span', { class: 'stars' }, Shop.stars(f.rating)), f.order_id ? h('span', { class: 'vpill' }, 'verified buyer') : '', f.is_visible ? '' : h('span', { class: 'pill' }, f.user_id ? 'pending' : 'hidden')),
           h('div', { class: 'c' }, [f.product_title, Shop.dt(f.created_at)].filter(Boolean).join(' | ')), h('div', { class: 'c' }, f.comment)),
         h('div', { class: 'acts', style: 'grid-column:auto' },
           h('button', { class: 'btn small', onclick: edit }, 'Edit'),
-          h('button', { class: 'btn small', onclick: async () => { await sb.from('feedbacks').update({ is_visible: !f.is_visible }).eq('id', f.id); loadFeedbacks(); } }, f.is_visible ? 'Hide' : 'Show'),
+          h('button', { class: 'btn small', onclick: async () => { await sb.from('feedbacks').update({ is_visible: !f.is_visible }).eq('id', f.id); loadFeedbacks(); } }, f.is_visible ? 'Hide' : (f.user_id ? 'Approve' : 'Show')),
           h('button', { class: 'btn small danger', onclick: async () => { if (confirm('Delete this feedback?')) { await sb.from('feedbacks').delete().eq('id', f.id); loadFeedbacks(); } } }, 'Delete')));
       const edit = () => {
         const name = h('input', { type: 'text', maxlength: '60', value: f.author });

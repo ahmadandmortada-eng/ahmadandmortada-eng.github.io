@@ -33,12 +33,12 @@
   const totalFor = q => { const cur = Math.round(Number(p.price) * q * (100 - pct)) / 100; return p.currency === 'DZD' ? Math.ceil(cur) : Math.round(cur * 100) / 100; };
 
   async function reviews(box) {
-    const { data } = await sb.from('feedbacks').select('*').eq('product_id', p.id).eq('is_visible', true).order('created_at', { ascending: false }).limit(10);
+    const { data } = await sb.from('feedbacks_public').select('*').eq('product_id', p.id).order('created_at', { ascending: false }).limit(10);
     if (!data || !data.length) return;
     const avg = data.reduce((a, r) => a + r.rating, 0) / data.length;
     box.append(h('h2', { style: 'font-size:1.5rem' }, 'Feedbacks'),
       h('p', { class: 'meta' }, h('span', { class: 'stars' }, Shop.stars(Math.round(avg))), ' ' + avg.toFixed(1) + ' (' + data.length + ')'),
-      h('div', { class: 'panel' }, data.map(r => h('div', { class: 'rev' }, h('div', { class: 'who' }, h('b', {}, r.author), h('span', { class: 'stars' }, Shop.stars(r.rating))), h('p', {}, r.comment)))));
+      h('div', { class: 'panel' }, data.map(r => h('div', { class: 'rev' }, h('div', { class: 'who' }, h('b', {}, r.author, r.verified ? h('span', { class: 'vpill' }, 'Verified purchase') : null), h('span', { class: 'stars' }, Shop.stars(r.rating))), h('p', {}, r.comment)))));
   }
 
   function build() {
